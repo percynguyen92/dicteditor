@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.HazeState
-import com.example.ui.components.hazeGlassmorphism
 
 @Composable
 fun BulkSelectionBar(
@@ -43,9 +43,9 @@ fun BulkSelectionBar(
         Color.Transparent
     }
     val bgColorSpec = if (isBulkMode) {
-        tween(durationMillis = 100)
+        tween<Color>(durationMillis = 100)
     } else {
-        tween(durationMillis = 100, delayMillis = 100)
+        tween<Color>(durationMillis = 100, delayMillis = 100)
     }
     val bgColor by animateColorAsState(
         targetValue = targetBgColor,
@@ -56,9 +56,9 @@ fun BulkSelectionBar(
     // Animate width from 56.dp (FAB) to screenWidth - 32.dp (Bar)
     val targetWidth = if (isBulkMode) screenWidth - 32.dp else 56.dp
     val widthSpec = if (isBulkMode) {
-        tween(durationMillis = 100, delayMillis = 100)
+        tween<Dp>(durationMillis = 100, delayMillis = 100)
     } else {
-        tween(durationMillis = 100)
+        tween<Dp>(durationMillis = 100)
     }
     val width by animateDpAsState(
         targetValue = targetWidth,
