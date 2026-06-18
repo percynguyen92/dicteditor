@@ -32,6 +32,8 @@ fun AppTopBar(
     searchUseRegex: Boolean,
     searchMatchCase: Boolean,
     statusMessage: String,
+    isReplaceMode: Boolean,
+    replaceQuery: String,
     onUndoClick: () -> Unit,
     onRedoClick: () -> Unit,
     onSaveClick: () -> Unit,
@@ -45,7 +47,10 @@ fun AppTopBar(
     onCheckAiConnectionClick: () -> Unit,
     onExitClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
-    onClearSearch: () -> Unit
+    onReplaceQueryChange: (String) -> Unit,
+    onClearSearch: () -> Unit,
+    onReplaceClick: () -> Unit,
+    onCloseReplaceMode: () -> Unit
 ) {
     val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
@@ -61,7 +66,6 @@ fun AppTopBar(
                 .fillMaxWidth()
                 .hazeGlassmorphism(
                     state = hazeState,
-                    cornerRadius = 12,
                     shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
                 )
         ) {
@@ -188,7 +192,7 @@ fun AppTopBar(
                                 modifier = Modifier.hazeGlassmorphism(hazeState, cornerRadius = 12)
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Mở file từ điện thoại") },
+                                    text = { Text("Mở file") },
                                     leadingIcon = { Icon(Icons.Default.List, contentDescription = "Open file") },
                                     onClick = {
                                         menuExpanded = false
@@ -196,17 +200,8 @@ fun AppTopBar(
                                     },
                                     modifier = Modifier.testTag("open_file_menu")
                                 )
+                                HorizontalDivider()
                                 if (openedFileUri != null) {
-                                    DropdownMenuItem(
-                                        text = { Text("Lưu file") },
-                                        leadingIcon = { Icon(Icons.Default.Check, contentDescription = "Save file") },
-                                        onClick = {
-                                            menuExpanded = false
-                                            onSaveClick()
-                                        },
-                                        modifier = Modifier.testTag("save_file_menu")
-                                    )
-                                    HorizontalDivider()
                                     DropdownMenuItem(
                                         text = { Text("Sắp xếp: Dài → Ngắn") },
                                         leadingIcon = { Icon(Icons.Default.List, contentDescription = "Sort Long to Short") },
@@ -235,7 +230,7 @@ fun AppTopBar(
                                         modifier = Modifier.testTag("find_replace_menu")
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Nhập hàng loạt (Batch)") },
+                                        text = { Text("Import") },
                                         leadingIcon = { Icon(Icons.Default.Add, contentDescription = "Batch import") },
                                         onClick = {
                                             menuExpanded = false
@@ -253,14 +248,6 @@ fun AppTopBar(
                                         onCheckAiConnectionClick()
                                     },
                                     modifier = Modifier.testTag("check_ai_connection_menu")
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Thoát ứng dụng") },
-                                    leadingIcon = { Icon(Icons.Default.ExitToApp, contentDescription = "Exit app") },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onExitClick()
-                                    }
                                 )
                             }
                         }
@@ -290,10 +277,15 @@ fun AppTopBar(
                         searchQuery = searchQuery,
                         searchUseRegex = searchUseRegex,
                         searchMatchCase = searchMatchCase,
+                        isReplaceMode = isReplaceMode,
+                        replaceQuery = replaceQuery,
                         onSearchQueryChange = onSearchQueryChange,
+                        onReplaceQueryChange = onReplaceQueryChange,
                         onClearSearch = onClearSearch,
                         onToggleRegex = onToggleRegex,
-                        onToggleMatchCase = onToggleMatchCase
+                        onToggleMatchCase = onToggleMatchCase,
+                        onReplaceClick = onReplaceClick,
+                        onCloseReplaceMode = onCloseReplaceMode
                     )
                 }
             }

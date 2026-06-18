@@ -23,6 +23,8 @@ fun MainContentArea(
     isLoading: Boolean,
     displayEntries: List<DictEntry>,
     recentFiles: List<Uri>,
+    fileLoadError: Pair<Uri, String>?,
+    onClearError: () -> Unit,
     searchQuery: String,
     selectedIds: Map<String, Boolean>,
     highlightedIds: Set<String>,
@@ -45,6 +47,8 @@ fun MainContentArea(
                 RecentFilesView(
                     hazeState = hazeState,
                     recentFiles = recentFiles,
+                    fileLoadError = fileLoadError,
+                    onClearError = onClearError,
                     onFileClick = onFileClick,
                     onOpenNewClick = onOpenNewClick
                 )

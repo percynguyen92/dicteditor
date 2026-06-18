@@ -7,4 +7,5 @@ interface IAiPortalService {
     void getSuggestion(String requestId, String chinese, IAiPortalCallback callback);
     void cancelRequest(String requestId);
     String getStatus();
+    void clearCache(String chinese);
 }

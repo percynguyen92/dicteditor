@@ -46,7 +46,6 @@ fun PaginationBar(
                 .fillMaxWidth()
                 .hazeGlassmorphism(
                     state = hazeState,
-                    cornerRadius = 12,
                     shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                 )
         ) {

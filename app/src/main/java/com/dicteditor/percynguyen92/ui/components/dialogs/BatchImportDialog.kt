@@ -4,19 +4,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dicteditor.percynguyen92.ui.components.glassTextFieldColors
+import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
+import dev.chrisbanes.haze.HazeState
 
 @Composable
 fun BatchImportDialog(
+    hazeState: HazeState,
     onDismiss: () -> Unit,
     onImport: (rawText: String) -> Unit
 ) {
     var rawText by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
+    HazeAlertDialog(
+        hazeState = hazeState,
         onDismissRequest = onDismiss,
         title = {
             Text(

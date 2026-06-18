@@ -37,10 +37,11 @@ fun Modifier.hazeGlassmorphism(
     isDarkTheme: Boolean = true,
     blurRadius: Dp = 12.dp,
     tint: Color = Color.Unspecified,
-    shape: Shape? = null
+    shape: Shape? = null,
+    borderColor: Color = Color.Unspecified
 ): Modifier {
     val surfaceColor = if (tint != Color.Unspecified) tint else (if (isDarkTheme) DarkColors.GlassSurface else LightColors.GlassSurface)
-    val borderColor = if (isDarkTheme) DarkColors.GlassBorder else LightColors.GlassBorder
+    val actualBorderColor = if (borderColor != Color.Unspecified) borderColor else (if (isDarkTheme) DarkColors.GlassBorder else LightColors.GlassBorder)
     val actualShape = shape ?: RoundedCornerShape(cornerRadius.dp)
 
     return shadow(
@@ -61,7 +62,7 @@ fun Modifier.hazeGlassmorphism(
         )
         .border(
             width = 1.dp,
-            color = borderColor,
+            color = actualBorderColor,
             shape = actualShape
         )
 }

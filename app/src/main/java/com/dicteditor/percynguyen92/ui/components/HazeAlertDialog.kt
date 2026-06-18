@@ -26,7 +26,7 @@ fun HazeAlertDialog(
         Surface(
             modifier = modifier
                 .fillMaxWidth()
-                .hazeGlassmorphism(hazeState, cornerRadius = 28),
+                .hazeGlassmorphism(hazeState, cornerRadius = 12),
             color = Color.Transparent,
         ) {
             Column(

@@ -34,4 +34,22 @@ object RecentFilesManager {
         
         return getRecentFiles(context)
     }
+
+    fun removeRecentFile(context: Context, uri: Uri): List<Uri> {
+        val prefs = context.getSharedPreferences("dict_prefs", Context.MODE_PRIVATE)
+        val currentStr = prefs.getString("recent_files", "")
+        val currentList = currentStr?.split(",")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
+        val uriStr = uri.toString()
+        if (currentList.remove(uriStr)) {
+            prefs.edit().putString("recent_files", currentList.joinToString(",")).apply()
+        }
+        
+        // Also remove from last_file_uri if it matches the removed URI
+        val lastUriString = prefs.getString("last_file_uri", null)
+        if (lastUriString == uriStr) {
+            prefs.edit().remove("last_file_uri").apply()
+        }
+        
+        return getRecentFiles(context)
+    }
 }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -203,6 +204,7 @@ fun WordFormScreen(
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         shape = RoundedCornerShape(12.dp),
@@ -241,6 +243,7 @@ fun WordFormScreen(
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         shape = RoundedCornerShape(12.dp),
@@ -253,7 +256,6 @@ fun WordFormScreen(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Đang lấy...", maxLines = 1)
                         } else {
                             Icon(
                                 Icons.Default.Star,
@@ -274,7 +276,50 @@ fun WordFormScreen(
                     AiSuggestionCard(
                         parcel = aiResult!!,
                         hazeState = hazeState,
-                        onUseMeanings = { meaningsStr = it }
+                        onUseMeanings = { meaningsStr = it },
+                        onClearCacheAndRefresh = {
+                            if (chinese.isBlank()) {
+                                aiError = "Vui lòng nhập từ tiếng Trung trước."
+                                return@AiSuggestionCard
+                            }
+                            if (!isAtpConnected) {
+                                aiError = "AI chưa kết nối. Đang thử kết nối lại..."
+                                atpConnectionManager.bindService()
+                                return@AiSuggestionCard
+                            }
+                            scope.launch {
+                                isTranslating = true
+                                aiResult = null
+                                aiError = null
+                                
+                                val clearResult = atpConnectionManager.clearCache(chinese.trim())
+                                if (clearResult.isFailure) {
+                                    aiError = "Lỗi xoá cache: ${clearResult.exceptionOrNull()?.message}"
+                                    isTranslating = false
+                                    return@launch
+                                }
+                                
+                                fetchAiSuggestion(
+                                    scope = scope,
+                                    chinese = chinese,
+                                    isAtpConnected = isAtpConnected,
+                                    atpConnectionManager = atpConnectionManager,
+                                    onStart = {
+                                        isTranslating = true
+                                        aiError = null
+                                        aiResult = null
+                                    },
+                                    onSuccess = { parcel ->
+                                        aiResult = parcel
+                                        isTranslating = false
+                                    },
+                                    onFailure = { err ->
+                                        aiError = err
+                                        isTranslating = false
+                                    }
+                                )
+                            }
+                        }
                     )
                 }
             }
@@ -310,6 +355,7 @@ fun AiSuggestionCard(
     parcel: AiSuggestionParcel,
     hazeState: HazeState,
     onUseMeanings: (String) -> Unit,
+    onClearCacheAndRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -335,34 +381,53 @@ fun AiSuggestionCard(
                             color = LocalContentColor.current.copy(alpha = 0.7f)
                         )
                     }
+
+                    if (parcel.note.isNotBlank()) {
+                        Text(
+                            text = "Ghi chú: ${parcel.note}",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp),
+                            color = LocalContentColor.current.copy(alpha = 0.7f)
+                        )
+                    }
                     
-                    Button(
-                        onClick = {
-                            val suggestedMeanings = parcel.meanings.map { it.meaning }
-                            onUseMeanings(suggestedMeanings.joinToString("/"))
-                        },
+                    Row(
                         modifier = Modifier
-                            .padding(top = 8.dp)
-                            .hazeGlassmorphism(hazeState, cornerRadius = 12),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp)
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Text("Sử dụng các nghĩa này", color = MaterialTheme.colorScheme.primary)
+                        Button(
+                            onClick = {
+                                val suggestedMeanings = parcel.meanings.map { it.meaning }
+                                onUseMeanings(suggestedMeanings.joinToString("/"))
+                            },
+                            modifier = Modifier
+                                .hazeGlassmorphism(hazeState),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("Sử dụng các nghĩa này", color = MaterialTheme.colorScheme.primary)
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Button(
+                            onClick = onClearCacheAndRefresh,
+                            modifier = Modifier
+                                .hazeGlassmorphism(hazeState, borderColor = MaterialTheme.colorScheme.error),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text("Xoá cache", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
                 
-                if (parcel.note.isNotBlank()) {
-                    Text(
-                        text = "Ghi chú: ${parcel.note}",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 8.dp),
-                        color = LocalContentColor.current.copy(alpha = 0.7f)
-                    )
-                }
-                
                 Text(
-                    text = if (parcel.fromCache) "Đã lấy từ Cache" else "Lấy từ AI mới",
+                    text = if (parcel.fromCache) "Cache" else "",
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 8.dp),
                     color = LocalContentColor.current.copy(alpha = 0.5f)

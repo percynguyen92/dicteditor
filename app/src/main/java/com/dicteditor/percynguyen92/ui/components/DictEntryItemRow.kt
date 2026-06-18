@@ -93,37 +93,19 @@ fun DictEntryItemRow(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     if (entry.meanings.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            entry.meanings.take(5).forEachIndexed { idx, meaning ->
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f, fill = false)
-                                        .background(
-                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                                            shape = RoundedCornerShape(4.dp)
-                                        )
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = meaning,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                if (idx < entry.meanings.size - 1 && idx < 4) {
-                                    Text("/", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
-                            if (entry.meanings.size > 5) {
-                                Text("...", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                            }
-                        }
+                        Text(
+                            text = entry.meanings.joinToString(" / "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
                     } else {
                         Text(
                             text = "Chưa có nghĩa dịch",
@@ -171,7 +153,7 @@ fun DictEntryItemRow(
     }
 
     if (showDeleteConfirmDialog) {
-        AlertDialog(
+        HazeAlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
             title = { Text("Xóa từ này?", style = MaterialTheme.typography.titleLarge) },
             text = { Text("Bạn có chắc chắn muốn xóa từ '${entry.chinese}' khỏi list từ điển?", style = MaterialTheme.typography.bodySmall) },
@@ -190,7 +172,8 @@ fun DictEntryItemRow(
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
                     Text("Hủy", style = MaterialTheme.typography.labelLarge)
                 }
-            }
+            },
+            hazeState = hazeState
         )
     }
 }

@@ -15,7 +15,28 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.dicteditor.percynguyen92.ui.theme.DarkColors
+import com.dicteditor.percynguyen92.ui.theme.LightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -39,10 +60,11 @@ import com.dicteditor.percynguyen92.ui.components.dialogs.AiErrorDialog
 import com.dicteditor.percynguyen92.ui.components.dialogs.BatchImportDialog
 import com.dicteditor.percynguyen92.ui.components.dialogs.CloseFileWarningDialog
 import com.dicteditor.percynguyen92.ui.components.dialogs.ExitWarningDialog
-import com.dicteditor.percynguyen92.ui.components.dialogs.FindReplaceDialog
 import com.dicteditor.percynguyen92.ui.components.dialogs.BulkDeleteConfirmDialog
 import com.dicteditor.percynguyen92.ui.theme.MyApplicationTheme
 import com.dicteditor.percynguyen92.viewmodel.DictionaryViewModel
+import com.dicteditor.percynguyen92.viewmodel.SnackbarType
+import com.dicteditor.percynguyen92.viewmodel.UiSnackbarEvent
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
@@ -94,14 +116,18 @@ fun DictEditorApp(
 
     val canUndo by viewModel.canUndo.collectAsStateWithLifecycle()
     val canRedo by viewModel.canRedo.collectAsStateWithLifecycle()
+    val fileLoadError by viewModel.fileLoadError.collectAsStateWithLifecycle()
     
     // Dialog state controllers
-    var showFindReplaceDialog by remember { mutableStateOf(false) }
     var showBatchImportDialog by remember { mutableStateOf(false) }
     var showExitWarningDialog by remember { mutableStateOf(false) }
     var showCloseFileWarningDialog by remember { mutableStateOf(false) }
     var showBulkDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showAiErrorDialog by remember { mutableStateOf(false) }
+
+    // Replace mode state
+    var isReplaceMode by remember { mutableStateOf(false) }
+    var replaceQuery by remember { mutableStateOf("") }
 
     // Edit entry state
     var editEntryTarget by remember { mutableStateOf<DictEntry?>(null) }
@@ -116,13 +142,16 @@ fun DictEditorApp(
     val isAtpConnected by atpConnectionManager.isConnected.collectAsStateWithLifecycle()
     val connectionError by atpConnectionManager.connectionError.collectAsStateWithLifecycle()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     // Manage effects and connection managers
     AppSideEffects(
         context = context,
         openedFileUri = openedFileUri,
         viewModel = viewModel,
         atpConnectionManager = atpConnectionManager,
-        selectedIds = selectedIds
+        selectedIds = selectedIds,
+        snackbarHostState = snackbarHostState
     )
 
     // Intercept back actions
@@ -172,11 +201,11 @@ fun DictEditorApp(
             val target = editEntryTarget
             if (target != null) {
                 val ok = viewModel.updateEntry(target.id, chinese, meanings)
-                if (ok) Toast.makeText(context, "Đã cập nhật từ", Toast.LENGTH_SHORT).show()
+                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals("Đã cập nhật từ", type = SnackbarType.SUCCESS))
                 editEntryTarget = null
             } else {
                 val ok = viewModel.addEntry(chinese, meanings)
-                if (ok) Toast.makeText(context, "Đã thêm từ mới vào list", Toast.LENGTH_SHORT).show()
+                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals("Đã thêm từ mới vào list", type = SnackbarType.SUCCESS))
             }
         }
     }
@@ -205,11 +234,13 @@ fun DictEditorApp(
                 onToggleMatchCase = { viewModel.setSearchMatchCase(!searchMatchCase) },
                 onSortDefaultLengthDescending = viewModel::sortByDefaultLengthDescending,
                 onSortLengthAscending = viewModel::sortByLengthAscending,
-                onFindReplaceClick = { showFindReplaceDialog = true },
+                onFindReplaceClick = { isReplaceMode = !isReplaceMode },
                 onBatchImportClick = { showBatchImportDialog = true },
                 onCheckAiConnectionClick = {
                     if (isAtpConnected) {
-                        Toast.makeText(context, "Kết nối AI (AIDL) đang hoạt động tốt.", Toast.LENGTH_SHORT).show()
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(CustomSnackbarVisuals("Kết nối AI (AIDL) đang hoạt động tốt.", type = SnackbarType.SUCCESS))
+                        }
                     } else {
                         atpConnectionManager.bindService()
                         showAiErrorDialog = true
@@ -222,13 +253,32 @@ fun DictEditorApp(
                         onExit()
                     }
                 },
+                isReplaceMode = isReplaceMode,
+                replaceQuery = replaceQuery,
                 onSearchQueryChange = {
                     viewModel.setSearchQuery(it)
                     selectedIds.clear()
                 },
+                onReplaceQueryChange = { replaceQuery = it },
                 onClearSearch = {
                     viewModel.setSearchQuery("")
                     selectedIds.clear()
+                },
+                onReplaceClick = {
+                    if (searchQuery.isNotEmpty()) {
+                        val scopeIds = viewModel.filteredEntriesIds
+                        viewModel.findAndReplace(
+                            findText = searchQuery,
+                            replaceText = replaceQuery,
+                            useRegex = searchUseRegex,
+                            matchCase = searchMatchCase,
+                            scopeIds = scopeIds
+                        )
+                    }
+                },
+                onCloseReplaceMode = {
+                    isReplaceMode = false
+                    replaceQuery = ""
                 }
             )
         },
@@ -276,6 +326,47 @@ fun DictEditorApp(
                     }
                 )
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                val isDark = isSystemInDarkTheme()
+                val type = (data.visuals as? CustomSnackbarVisuals)?.type ?: SnackbarType.INFO
+                val textColor = when (type) {
+                    SnackbarType.SUCCESS -> if (isDark) DarkColors.Success else LightColors.Success
+                    SnackbarType.ERROR -> if (isDark) DarkColors.Error else LightColors.Error
+                    SnackbarType.INFO -> if (isDark) DarkColors.Info else LightColors.Info
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .hazeGlassmorphism(
+                            state = hazeState
+                        )
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = data.visuals.message,
+                            color = textColor,
+                            modifier = Modifier.weight(1f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        IconButton(
+                            onClick = { data.dismiss() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Đóng",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
         }
     ) { innerPadding ->
         Box(
@@ -289,6 +380,8 @@ fun DictEditorApp(
                 isLoading = isLoading,
                 displayEntries = displayEntries,
                 recentFiles = recentFiles,
+                fileLoadError = fileLoadError,
+                onClearError = viewModel::clearFileLoadError,
                 searchQuery = searchQuery,
                 selectedIds = selectedIds,
                 highlightedIds = highlightedIds,
@@ -329,8 +422,7 @@ fun DictEditorApp(
     AppDialogs(
         context = context,
         viewModel = viewModel,
-        showFindReplaceDialog = showFindReplaceDialog,
-        onDismissFindReplace = { showFindReplaceDialog = false },
+        hazeState = hazeState,
         showBatchImportDialog = showBatchImportDialog,
         onDismissBatchImport = { showBatchImportDialog = false },
         showCloseFileWarningDialog = showCloseFileWarningDialog,
@@ -365,7 +457,8 @@ fun AppSideEffects(
     openedFileUri: Uri?,
     viewModel: DictionaryViewModel,
     atpConnectionManager: AiPortalConnectionManager,
-    selectedIds: MutableMap<String, Boolean>
+    selectedIds: MutableMap<String, Boolean>,
+    snackbarHostState: SnackbarHostState
 ) {
     LaunchedEffect(Unit) {
         atpConnectionManager.bindService()
@@ -381,10 +474,15 @@ fun AppSideEffects(
         selectedIds.clear()
     }
 
-    // Collect SharedFlow events for side effects (Toasts)
+    // Collect SharedFlow events for side effects (Toasts -> Snackbars)
     LaunchedEffect(Unit) {
-        viewModel.uiEvents.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        viewModel.uiEvents.collect { event ->
+            snackbarHostState.showSnackbar(
+                CustomSnackbarVisuals(
+                    message = event.message,
+                    type = event.type
+                )
+            )
         }
     }
 }
@@ -393,8 +491,7 @@ fun AppSideEffects(
 fun AppDialogs(
     context: Context,
     viewModel: DictionaryViewModel,
-    showFindReplaceDialog: Boolean,
-    onDismissFindReplace: () -> Unit,
+    hazeState: HazeState,
     showBatchImportDialog: Boolean,
     onDismissBatchImport: () -> Unit,
     showCloseFileWarningDialog: Boolean,
@@ -412,18 +509,9 @@ fun AppDialogs(
     isAtpConnected: Boolean,
     connectionError: String?
 ) {
-    if (showFindReplaceDialog) {
-        FindReplaceDialog(
-            onDismiss = onDismissFindReplace,
-            onReplaceAll = { find, replace, useRegex ->
-                viewModel.findAndReplace(find, replace, useRegex)
-                onDismissFindReplace()
-            }
-        )
-    }
-
     if (showBatchImportDialog) {
         BatchImportDialog(
+            hazeState = hazeState,
             onDismiss = onDismissBatchImport,
             onImport = { rawText ->
                 viewModel.batchImport(rawText)
@@ -434,6 +522,7 @@ fun AppDialogs(
 
     if (showCloseFileWarningDialog) {
         CloseFileWarningDialog(
+            hazeState = hazeState,
             onDismiss = onDismissCloseFileWarning,
             onSaveAndClose = {
                 onDismissCloseFileWarning()
@@ -448,6 +537,7 @@ fun AppDialogs(
 
     if (showExitWarningDialog) {
         ExitWarningDialog(
+            hazeState = hazeState,
             onDismiss = onDismissExitWarning,
             onSaveAndExit = {
                 onDismissExitWarning()
@@ -462,6 +552,7 @@ fun AppDialogs(
 
     if (showBulkDeleteConfirmDialog) {
         BulkDeleteConfirmDialog(
+            hazeState = hazeState,
             selectedCount = selectedIds.count { it.value },
             onDismiss = onDismissBulkDeleteConfirm,
             onConfirmDelete = {
@@ -473,10 +564,19 @@ fun AppDialogs(
 
     if (showAiErrorDialog) {
         AiErrorDialog(
+            hazeState = hazeState,
             isAtpConnected = isAtpConnected,
             connectionError = connectionError,
             onDismiss = onDismissAiError
         )
     }
 }
+
+class CustomSnackbarVisuals(
+    override val message: String,
+    override val actionLabel: String? = null,
+    override val withDismissAction: Boolean = false,
+    override val duration: androidx.compose.material3.SnackbarDuration = androidx.compose.material3.SnackbarDuration.Short,
+    val type: SnackbarType = SnackbarType.INFO
+) : androidx.compose.material3.SnackbarVisuals
 

@@ -27,10 +27,30 @@ import androidx.compose.ui.graphics.Color
 fun RecentFilesView(
     hazeState: HazeState,
     recentFiles: List<Uri>,
+    fileLoadError: Pair<Uri, String>?,
+    onClearError: () -> Unit,
     onFileClick: (Uri) -> Unit,
     onOpenNewClick: () -> Unit
 ) {
     val context = LocalContext.current
+
+    if (fileLoadError != null) {
+        val (uri, errorMsg) = fileLoadError
+        val displayPath = uri.path ?: uri.toString()
+        HazeAlertDialog(
+            onDismissRequest = onClearError,
+            title = { Text("Không thể mở file") },
+            text = {
+                Text("File không còn tồn tại hoặc bị lỗi không thể đọc dữ liệu.\n\nĐường dẫn: $displayPath\n\nChi tiết lỗi: $errorMsg\n\nFile này đã được xóa khỏi danh sách gần đây.")
+            },
+            confirmButton = {
+                TextButton(onClick = onClearError) {
+                    Text("Đồng ý")
+                }
+            },
+            hazeState = hazeState
+        )
+    }
     if (recentFiles.isEmpty()) {
         EmptyStateView(
             icon = Icons.Default.Info,
@@ -126,8 +146,13 @@ fun RecentFilesView(
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onOpenNewClick,
+                modifier = Modifier.fillMaxWidth(0.8f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(0.8f)
+                elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
             ) {
                 Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))

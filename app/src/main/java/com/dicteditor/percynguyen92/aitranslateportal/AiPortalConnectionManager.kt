@@ -150,4 +150,14 @@ class AiPortalConnectionManager(private val context: Context) {
             }
         }
     }
+
+    suspend fun clearCache(chinese: String): Result<Unit> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val service = aiPortalService ?: return@withContext Result.failure(Exception("AI Translate Portal service is not connected."))
+        try {
+            service.clearCache(chinese)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

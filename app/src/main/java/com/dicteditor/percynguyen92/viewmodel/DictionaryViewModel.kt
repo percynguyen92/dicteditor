@@ -46,11 +46,18 @@ class DictionaryViewModel : ViewModel() {
     private val _statusMessage = MutableStateFlow("")
     val statusMessage: StateFlow<String> = _statusMessage.asStateFlow()
 
-    private val _uiEvents = MutableSharedFlow<String>()
-    val uiEvents: SharedFlow<String> = _uiEvents.asSharedFlow()
+    private val _uiEvents = MutableSharedFlow<UiSnackbarEvent>()
+    val uiEvents: SharedFlow<UiSnackbarEvent> = _uiEvents.asSharedFlow()
 
     private val _recentFiles = MutableStateFlow<List<Uri>>(emptyList())
     val recentFiles: StateFlow<List<Uri>> = _recentFiles.asStateFlow()
+
+    private val _fileLoadError = MutableStateFlow<Pair<Uri, String>?>(null)
+    val fileLoadError: StateFlow<Pair<Uri, String>?> = _fileLoadError.asStateFlow()
+
+    fun clearFileLoadError() {
+        _fileLoadError.value = null
+    }
 
     // Expose flows directly from repository
     val openedFileUri: StateFlow<Uri?> = repository.openedFileUri
@@ -61,6 +68,9 @@ class DictionaryViewModel : ViewModel() {
 
     // Filtered list based on search query
     private var filteredEntries: List<DictEntry> = emptyList()
+
+    val filteredEntriesIds: Set<String>
+        get() = filteredEntries.map { it.id }.toSet()
 
     private val _filteredEntriesCount = MutableStateFlow(0)
     val filteredEntriesCount: StateFlow<Int> = _filteredEntriesCount.asStateFlow()
@@ -119,6 +129,10 @@ class DictionaryViewModel : ViewModel() {
 
     private fun addRecentFile(context: Context, uri: Uri) {
         _recentFiles.value = RecentFilesManager.addRecentFile(context, uri)
+    }
+
+    fun removeRecentFile(context: Context, uri: Uri) {
+        _recentFiles.value = RecentFilesManager.removeRecentFile(context, uri)
     }
 
     private fun updateDisplay() {
@@ -190,13 +204,13 @@ class DictionaryViewModel : ViewModel() {
                     val count = result.getOrThrow()
                     addRecentFile(context, uri)
                     _statusMessage.value = "Đã tải $count từ"
-                    _uiEvents.emit("Đã tải thành công $count từ")
+                    _uiEvents.emit(UiSnackbarEvent("Đã tải thành công $count từ", SnackbarType.SUCCESS))
                 } else {
                     val exception = result.exceptionOrNull()
-                    if (exception !is CancellationException) {
                         _statusMessage.value = "Lỗi khi tải file"
-                        _uiEvents.emit("Lỗi khi tải file: ${exception?.message}")
-                    }
+                        val errorMsg = exception?.message ?: "Lỗi không xác định"
+                        _fileLoadError.value = Pair(uri, errorMsg)
+                        removeRecentFile(context, uri)
                 }
             } finally {
                 decrementLoading()
@@ -213,11 +227,11 @@ class DictionaryViewModel : ViewModel() {
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
                     _statusMessage.value = "Đã lưu $count từ"
-                    _uiEvents.emit("Đã lưu thành công $count từ")
+                    _uiEvents.emit(UiSnackbarEvent("Đã lưu thành công $count từ", SnackbarType.SUCCESS))
                 } else {
                     val exception = result.exceptionOrNull()
                     _statusMessage.value = "Lỗi khi lưu file"
-                    _uiEvents.emit("Không có quyền ghi file hoặc lỗi: ${exception?.message}")
+                    _uiEvents.emit(UiSnackbarEvent("Không có quyền ghi file hoặc lỗi: ${exception?.message}", SnackbarType.ERROR))
                 }
             } finally {
                 decrementLoading()
@@ -256,7 +270,7 @@ class DictionaryViewModel : ViewModel() {
             try {
                 val ok = repository.undo()
                 if (ok) {
-                    _uiEvents.emit("Đã hoàn tác (Undo)")
+                    _uiEvents.emit(UiSnackbarEvent("Đã hoàn tác (Undo)", SnackbarType.INFO))
                 }
             } finally {
                 decrementLoading()
@@ -270,7 +284,7 @@ class DictionaryViewModel : ViewModel() {
             try {
                 val ok = repository.redo()
                 if (ok) {
-                    _uiEvents.emit("Đã làm lại (Redo)")
+                    _uiEvents.emit(UiSnackbarEvent("Đã làm lại (Redo)", SnackbarType.INFO))
                 }
             } finally {
                 decrementLoading()
@@ -285,7 +299,7 @@ class DictionaryViewModel : ViewModel() {
             when (result) {
                 EntryOpResult.Success -> return true
                 EntryOpResult.Duplicate -> {
-                    _uiEvents.emit("Từ '$chinese' đã tồn tại trong từ điển, bỏ qua!")
+                    _uiEvents.emit(UiSnackbarEvent("Từ '$chinese' đã tồn tại trong từ điển, bỏ qua!", SnackbarType.ERROR))
                     return false
                 }
                 EntryOpResult.Invalid -> return false
@@ -302,7 +316,7 @@ class DictionaryViewModel : ViewModel() {
             when (result) {
                 EntryOpResult.Success -> return true
                 EntryOpResult.Duplicate -> {
-                    _uiEvents.emit("Từ '$chinese' đã trùng với một từ khác trong từ điển!")
+                    _uiEvents.emit(UiSnackbarEvent("Từ '$chinese' đã trùng với một từ khác trong từ điển!", SnackbarType.ERROR))
                     return false
                 }
                 EntryOpResult.Invalid -> return false
@@ -329,7 +343,7 @@ class DictionaryViewModel : ViewModel() {
             incrementLoading()
             try {
                 repository.deleteEntries(ids)
-                _uiEvents.emit("Đã xóa hàng loạt ${ids.size} từ")
+                _uiEvents.emit(UiSnackbarEvent("Đã xóa hàng loạt ${ids.size} từ", SnackbarType.SUCCESS))
             } finally {
                 decrementLoading()
             }
@@ -342,7 +356,7 @@ class DictionaryViewModel : ViewModel() {
             _statusMessage.value = "Đang sắp xếp từ điển..."
             try {
                 repository.sortByDefaultLengthDescending()
-                _uiEvents.emit("Đã sắp xếp từ dài tới ngắn (mặc định)")
+                _uiEvents.emit(UiSnackbarEvent("Đã sắp xếp từ dài tới ngắn (mặc định)", SnackbarType.INFO))
                 _statusMessage.value = "Đã sắp xếp dài -> ngắn"
             } finally {
                 decrementLoading()
@@ -356,7 +370,7 @@ class DictionaryViewModel : ViewModel() {
             _statusMessage.value = "Đang sắp xếp từ điển..."
             try {
                 repository.sortByLengthAscending()
-                _uiEvents.emit("Đã sắp xếp từ ngắn tới dài")
+                _uiEvents.emit(UiSnackbarEvent("Đã sắp xếp từ ngắn tới dài", SnackbarType.INFO))
                 _statusMessage.value = "Đã sắp xếp ngắn -> dài"
             } finally {
                 decrementLoading()
@@ -364,20 +378,26 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 
-    fun findAndReplace(findText: String, replaceText: String, useRegex: Boolean) {
+    fun findAndReplace(
+        findText: String,
+        replaceText: String,
+        useRegex: Boolean,
+        matchCase: Boolean,
+        scopeIds: Set<String>? = null
+    ) {
         if (findText.isEmpty()) return
         viewModelScope.launch {
             incrementLoading()
             _statusMessage.value = "Đang tìm và thay thế..."
             try {
-                val result = repository.findAndReplace(findText, replaceText, useRegex)
+                val result = repository.findAndReplace(findText, replaceText, useRegex, matchCase, scopeIds)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
-                    _uiEvents.emit("Đã thay thế $count lần")
-                    _statusMessage.value = "Thay thế: ${count} lần"
+                    _uiEvents.emit(UiSnackbarEvent("Đã thay thế $count lần", SnackbarType.SUCCESS))
+                    _statusMessage.value = "Thay thế: $count lần"
                 } else {
                     val exception = result.exceptionOrNull()
-                    _uiEvents.emit("Lỗi tìm kiếm Regex: ${exception?.message}")
+                    _uiEvents.emit(UiSnackbarEvent("Lỗi Regex: ${exception?.message}", SnackbarType.ERROR))
                     _statusMessage.value = "Lỗi Regex"
                 }
             } finally {
@@ -393,11 +413,11 @@ class DictionaryViewModel : ViewModel() {
             _statusMessage.value = "Đang import hàng loạt..."
             try {
                 val importResult = repository.batchImport(rawText)
-                _uiEvents.emit("Đã import ${importResult.importedNewCount} từ mới, gộp ${importResult.mergedCount} từ trùng và bỏ qua ${importResult.invalidSkipCount} dòng lỗi")
+                _uiEvents.emit(UiSnackbarEvent("Đã import ${importResult.importedNewCount} từ mới, gộp ${importResult.mergedCount} từ trùng và bỏ qua ${importResult.invalidSkipCount} dòng lỗi", SnackbarType.SUCCESS))
                 _statusMessage.value = "Đã import ${importResult.importedNewCount} từ, gộp ${importResult.mergedCount}"
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiEvents.emit("Lỗi khi batch import: ${e.message}")
+                _uiEvents.emit(UiSnackbarEvent("Lỗi khi batch import: ${e.message}", SnackbarType.ERROR))
             } finally {
                 decrementLoading()
             }
@@ -455,4 +475,13 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 }
+
+enum class SnackbarType {
+    SUCCESS, ERROR, INFO
+}
+
+data class UiSnackbarEvent(
+    val message: String,
+    val type: SnackbarType = SnackbarType.INFO
+)
 

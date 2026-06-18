@@ -245,12 +245,19 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
         }
     }
 
-    suspend fun findAndReplace(findText: String, replaceText: String, useRegex: Boolean): Result<Int> = withContext(Dispatchers.Default) {
+    suspend fun findAndReplace(
+        findText: String,
+        replaceText: String,
+        useRegex: Boolean,
+        matchCase: Boolean,
+        scopeIds: Set<String>? = null
+    ): Result<Int> = withContext(Dispatchers.Default) {
         if (findText.isEmpty()) return@withContext Result.success(0)
-        
+
+        val regexOptions = if (!matchCase) setOf(RegexOption.IGNORE_CASE) else emptySet()
         val regex = if (useRegex) {
             try {
-                Regex(findText)
+                Regex(findText, regexOptions)
             } catch (e: Exception) {
                 return@withContext Result.failure(e)
             }
@@ -259,55 +266,48 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
         mutex.withLock {
             var totalReplacements = 0
             val updated = allEntries.map { entry ->
+                // Neu scopeIds duoc chi dinh, chi xu ly nhung entry nam trong scope
+                if (scopeIds != null && entry.id !in scopeIds) return@map entry
+
                 var lineChanged = false
                 var newChinese = entry.chinese
+
                 if (useRegex && regex != null) {
-                    if (regex.containsMatchIn(newChinese)) {
-                        val matches = regex.findAll(newChinese).toList()
-                        if (matches.isNotEmpty()) {
-                            totalReplacements += matches.size
-                            lineChanged = true
-                            newChinese = newChinese.replace(regex, replaceText)
-                        }
+                    val matches = regex.findAll(newChinese).toList()
+                    if (matches.isNotEmpty()) {
+                        totalReplacements += matches.size
+                        lineChanged = true
+                        newChinese = newChinese.replace(regex, replaceText)
                     }
                 } else {
-                    if (newChinese.contains(findText)) {
-                        val count = newChinese.split(findText).size - 1
-                        if (count > 0) {
-                            totalReplacements += count
-                            lineChanged = true
-                            newChinese = newChinese.replace(findText, replaceText)
-                        }
+                    val count = newChinese.split(findText, ignoreCase = !matchCase).size - 1
+                    if (count > 0) {
+                        totalReplacements += count
+                        lineChanged = true
+                        newChinese = newChinese.replace(findText, replaceText, ignoreCase = !matchCase)
                     }
                 }
 
                 val newMeanings = entry.meanings.map { meaning ->
                     if (useRegex && regex != null) {
-                        if (regex.containsMatchIn(meaning)) {
-                            val matches = regex.findAll(meaning).toList()
-                            if (matches.isNotEmpty()) {
-                                totalReplacements += matches.size
-                                lineChanged = true
-                                meaning.replace(regex, replaceText)
-                            } else meaning
+                        val matches = regex.findAll(meaning).toList()
+                        if (matches.isNotEmpty()) {
+                            totalReplacements += matches.size
+                            lineChanged = true
+                            meaning.replace(regex, replaceText)
                         } else meaning
                     } else {
-                        if (meaning.contains(findText)) {
-                            val count = meaning.split(findText).size - 1
-                            if (count > 0) {
-                                totalReplacements += count
-                                lineChanged = true
-                                meaning.replace(findText, replaceText)
-                            } else meaning
+                        val count = meaning.split(findText, ignoreCase = !matchCase).size - 1
+                        if (count > 0) {
+                            totalReplacements += count
+                            lineChanged = true
+                            meaning.replace(findText, replaceText, ignoreCase = !matchCase)
                         } else meaning
                     }
                 }
 
-                if (lineChanged) {
-                    entry.copy(chinese = newChinese, meanings = newMeanings)
-                } else {
-                    entry
-                }
+                if (lineChanged) entry.copy(chinese = newChinese, meanings = newMeanings)
+                else entry
             }
 
             if (totalReplacements > 0) {
