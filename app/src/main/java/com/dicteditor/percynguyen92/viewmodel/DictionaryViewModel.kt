@@ -59,6 +59,9 @@ class DictionaryViewModel : ViewModel() {
         _fileLoadError.value = null
     }
 
+    private val _searchError = MutableStateFlow<String?>(null)
+    val searchError: StateFlow<String?> = _searchError.asStateFlow()
+
     // Expose flows directly from repository
     val openedFileUri: StateFlow<Uri?> = repository.openedFileUri
     val hasUnsavedChanges: StateFlow<Boolean> = repository.hasUnsavedChanges
@@ -160,11 +163,22 @@ class DictionaryViewModel : ViewModel() {
         val isRegex = _searchUseRegex.value
         val matchCase = _searchMatchCase.value
         
-        val filtered = withContext(Dispatchers.Default) {
+        val result = withContext(Dispatchers.Default) {
             SearchEngine.filterEntries(query, entries, isRegex, matchCase)
         }
         
         withContext(Dispatchers.Main) {
+            val filtered = result.getOrElse { exception ->
+                _searchError.value = exception.message
+                setFilteredList(emptyList(), entries.size)
+                if (!maintainPage) {
+                    _currentPage.value = 0
+                }
+                updateDisplay()
+                return@withContext
+            }
+            
+            _searchError.value = null
             setFilteredList(filtered, entries.size)
             if (!maintainPage) {
                 _currentPage.value = 0

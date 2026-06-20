@@ -7,6 +7,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 import dev.chrisbanes.haze.HazeState
 
@@ -31,11 +33,11 @@ fun AiErrorDialog(
         HazeAlertDialog(
             hazeState = hazeState,
             onDismissRequest = onDismiss,
-            title = { Text("Lỗi kết nối AI", style = MaterialTheme.typography.titleLarge) },
-            text = { Text("Nguyên nhân: $connectionError", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) },
+            title = { Text(stringResource(R.string.dialog_ai_error_title), style = MaterialTheme.typography.titleLarge) },
+            text = { Text(stringResource(R.string.dialog_ai_error_cause, connectionError), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) },
             confirmButton = {
                 Button(onClick = onDismiss) {
-                    Text("Đóng", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.description_close), style = MaterialTheme.typography.labelLarge)
                 }
             }
         )
@@ -43,11 +45,11 @@ fun AiErrorDialog(
         HazeAlertDialog(
             hazeState = hazeState,
             onDismissRequest = onDismiss,
-            title = { Text("Đang kết nối AI...", style = MaterialTheme.typography.titleLarge) },
-            text = { Text("Vui lòng đợi một chút hoặc kiểm tra xem ứng dụng AI Portal có đang chạy không.", style = MaterialTheme.typography.bodySmall) },
+            title = { Text(stringResource(R.string.dialog_ai_connecting_title), style = MaterialTheme.typography.titleLarge) },
+            text = { Text(stringResource(R.string.dialog_ai_connecting_message), style = MaterialTheme.typography.bodySmall) },
             confirmButton = {
                 Button(onClick = onDismiss) {
-                    Text("Đóng", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.description_close), style = MaterialTheme.typography.labelLarge)
                 }
             }
         )

@@ -6,6 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 import dev.chrisbanes.haze.HazeState
 
@@ -19,19 +21,19 @@ fun BulkDeleteConfirmDialog(
     HazeAlertDialog(
         hazeState = hazeState,
         onDismissRequest = onDismiss,
-        title = { Text("Xóa nhiều từ?", style = MaterialTheme.typography.titleLarge) },
-        text = { Text("Bạn có chắc chắn muốn xóa $selectedCount từ đã chọn?", style = MaterialTheme.typography.bodySmall) },
+        title = { Text(stringResource(R.string.dialog_bulk_delete_title), style = MaterialTheme.typography.titleLarge) },
+        text = { Text(stringResource(R.string.dialog_bulk_delete_message, selectedCount), style = MaterialTheme.typography.bodySmall) },
         confirmButton = {
             Button(
                 onClick = onConfirmDelete,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Xóa", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.dialog_delete), style = MaterialTheme.typography.labelLarge)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.dialog_cancel), style = MaterialTheme.typography.labelLarge)
             }
         }
     )

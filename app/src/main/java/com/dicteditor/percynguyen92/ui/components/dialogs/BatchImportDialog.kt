@@ -5,6 +5,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.ui.components.glassTextFieldColors
 import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 import dev.chrisbanes.haze.HazeState
@@ -18,12 +20,14 @@ fun BatchImportDialog(
     var rawText by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf<String?>(null) }
 
+    val emptyError = stringResource(R.string.dialog_batch_import_error_empty)
+
     HazeAlertDialog(
         hazeState = hazeState,
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Nhập từ hàng loạt (Batch)",
+                text = stringResource(R.string.dialog_batch_import_title),
                 style = MaterialTheme.typography.titleLarge
             )
         },
@@ -35,7 +39,7 @@ fun BatchImportDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Dán các dòng từ điển có định dạng 'tiếng_Trung=nghĩa1/nghĩa2'. Mỗi từ nằm trên 1 dòng độc lập. Trùng lặp từ đã có sẽ được bỏ qua.",
+                    text = stringResource(R.string.dialog_batch_import_message),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -46,7 +50,7 @@ fun BatchImportDialog(
                         rawText = it
                         if (it.isNotBlank()) errorText = null
                     },
-                    placeholder = { Text("E.g.\n龙=rồng/long\n火=lửa/hỏa\n水=nước/thủy") },
+                    placeholder = { Text(stringResource(R.string.dialog_batch_import_hint)) },
                     minLines = 6,
                     maxLines = 12,
                     isError = errorText != null,
@@ -65,18 +69,18 @@ fun BatchImportDialog(
             Button(
                 onClick = {
                     if (rawText.isBlank()) {
-                        errorText = "Nội dung paste không được rỗng"
+                        errorText = emptyError
                     } else {
                         onImport(rawText)
                     }
                 }
             ) {
-                Text("Import", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.dialog_import), style = MaterialTheme.typography.labelLarge)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.dialog_cancel), style = MaterialTheme.typography.labelLarge)
             }
         }
     )

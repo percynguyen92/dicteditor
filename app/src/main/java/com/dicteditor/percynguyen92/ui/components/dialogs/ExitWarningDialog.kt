@@ -6,6 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 import dev.chrisbanes.haze.HazeState
 
@@ -19,20 +21,20 @@ fun ExitWarningDialog(
     HazeAlertDialog(
         hazeState = hazeState,
         onDismissRequest = onDismiss,
-        title = { Text("Thay đổi chưa lưu!", style = MaterialTheme.typography.titleLarge) },
-        text = { Text("Ứng dụng của bạn có thay đổi từ điển chưa lưu về file gốc. Hãy lưu trước khi rời khỏi hoặc bỏ qua.", style = MaterialTheme.typography.bodySmall) },
+        title = { Text(stringResource(R.string.dialog_unsaved_changes_title), style = MaterialTheme.typography.titleLarge) },
+        text = { Text(stringResource(R.string.dialog_exit_message), style = MaterialTheme.typography.bodySmall) },
         confirmButton = {
             Button(onClick = onSaveAndExit) {
-                Text("Lưu & Thoát", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.dialog_save_and_exit), style = MaterialTheme.typography.labelLarge)
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onDiscardAndExit) {
-                    Text("Bỏ qua đổi thay", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.dialog_discard_changes), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Hủy", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.dialog_cancel), style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

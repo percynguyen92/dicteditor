@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
 import com.dicteditor.percynguyen92.data.DictEntry
 import com.dicteditor.percynguyen92.ui.components.AppTopBar
@@ -117,6 +118,7 @@ fun DictEditorApp(
     val canUndo by viewModel.canUndo.collectAsStateWithLifecycle()
     val canRedo by viewModel.canRedo.collectAsStateWithLifecycle()
     val fileLoadError by viewModel.fileLoadError.collectAsStateWithLifecycle()
+    val searchError by viewModel.searchError.collectAsStateWithLifecycle()
     
     // Dialog state controllers
     var showBatchImportDialog by remember { mutableStateOf(false) }
@@ -143,6 +145,10 @@ fun DictEditorApp(
     val connectionError by atpConnectionManager.connectionError.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val snackbarUpdatedWord = stringResource(R.string.snackbar_updated_word)
+    val snackbarAddedWord = stringResource(R.string.snackbar_added_word)
+    val snackbarAiConnectedOk = stringResource(R.string.snackbar_ai_connected_ok)
 
     // Manage effects and connection managers
     AppSideEffects(
@@ -201,11 +207,11 @@ fun DictEditorApp(
             val target = editEntryTarget
             if (target != null) {
                 val ok = viewModel.updateEntry(target.id, chinese, meanings)
-                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals("Đã cập nhật từ", type = SnackbarType.SUCCESS))
+                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals(snackbarUpdatedWord, type = SnackbarType.SUCCESS))
                 editEntryTarget = null
             } else {
                 val ok = viewModel.addEntry(chinese, meanings)
-                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals("Đã thêm từ mới vào list", type = SnackbarType.SUCCESS))
+                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals(snackbarAddedWord, type = SnackbarType.SUCCESS))
             }
         }
     }
@@ -226,6 +232,7 @@ fun DictEditorApp(
                 searchUseRegex = searchUseRegex,
                 searchMatchCase = searchMatchCase,
                 statusMessage = statusMessage,
+                searchError = searchError,
                 onUndoClick = viewModel::undo,
                 onRedoClick = viewModel::redo,
                 onSaveClick = { viewModel.saveFile(context) },
@@ -239,7 +246,7 @@ fun DictEditorApp(
                 onCheckAiConnectionClick = {
                     if (isAtpConnected) {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar(CustomSnackbarVisuals("Kết nối AI (AIDL) đang hoạt động tốt.", type = SnackbarType.SUCCESS))
+                            snackbarHostState.showSnackbar(CustomSnackbarVisuals(snackbarAiConnectedOk, type = SnackbarType.SUCCESS))
                         }
                     } else {
                         atpConnectionManager.bindService()
@@ -360,7 +367,7 @@ fun DictEditorApp(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Đóng",
+                                contentDescription = stringResource(R.string.description_close),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -389,6 +396,7 @@ fun DictEditorApp(
                 onFileClick = { uri -> viewModel.loadFile(context, uri) },
                 onOpenNewClick = { filePickerLauncher.launch(arrayOf("text/plain", "*/*")) },
                 onSearchClear = { viewModel.setSearchQuery("") },
+                searchError = searchError,
                 onAddWordClick = {
                     editEntryTarget = null
                     val intent = Intent(context, WordFormActivity::class.java).apply {

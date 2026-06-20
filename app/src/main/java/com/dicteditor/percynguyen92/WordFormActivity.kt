@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
 import com.dicteditor.percynguyen92.aitranslateportal.AiSuggestionParcel
 import com.dicteditor.percynguyen92.ui.components.appBackground
@@ -138,19 +139,22 @@ fun WordFormScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val hazeState = remember { HazeState() }
+    
+    val errorInputChineseFirst = stringResource(R.string.error_input_chinese_first)
+    val errorAiNotConnected = stringResource(R.string.error_ai_not_connected)
 
     Box(modifier = Modifier.fillMaxSize().appBackground().hazeSource(hazeState)) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text(if (editMode) "Sửa từ" else "Thêm từ mới") },
+                    title = { Text(if (editMode) stringResource(R.string.title_edit_word) else stringResource(R.string.title_add_word)) },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
                     ),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Trở về")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_description))
                         }
                     }
                 )
@@ -169,7 +173,7 @@ fun WordFormScreen(
                 OutlinedTextField(
                     value = chinese,
                     onValueChange = { chinese = it },
-                    label = { Text("Từ tiếng Trung") },
+                    label = { Text(stringResource(R.string.label_chinese_word)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = glassTextFieldColors(),
                     shape = RoundedCornerShape(12.dp),
@@ -179,7 +183,7 @@ fun WordFormScreen(
                 OutlinedTextField(
                     value = meaningsStr,
                     onValueChange = { meaningsStr = it },
-                    label = { Text("Nghĩa ") },
+                    label = { Text(stringResource(R.string.label_meanings)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = glassTextFieldColors(),
                     shape = RoundedCornerShape(12.dp),
@@ -196,7 +200,7 @@ fun WordFormScreen(
                     Button(
                         onClick = {
                             if (chinese.isBlank()) {
-                                Toast.makeText(context, "Vui lòng nhập từ tiếng Trung trước.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, errorInputChineseFirst, Toast.LENGTH_SHORT).show()
                                 return@Button
                             }
                             val meaningsList = meaningsStr.split("/").map { it.trim() }.filter { it.isNotEmpty() }
@@ -216,12 +220,13 @@ fun WordFormScreen(
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Lưu", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.button_save), fontWeight = FontWeight.Bold)
                     }
 
                     Button(
                         onClick = {
                             fetchAiSuggestion(
+                                context = context,
                                 scope = scope,
                                 chinese = chinese,
                                 isAtpConnected = isAtpConnected,
@@ -263,7 +268,7 @@ fun WordFormScreen(
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Gợi ý AI", maxLines = 1)
+                            Text(stringResource(R.string.button_ai_suggestion), maxLines = 1)
                         }
                     }
                 }
@@ -279,11 +284,11 @@ fun WordFormScreen(
                         onUseMeanings = { meaningsStr = it },
                         onClearCacheAndRefresh = {
                             if (chinese.isBlank()) {
-                                aiError = "Vui lòng nhập từ tiếng Trung trước."
+                                aiError = errorInputChineseFirst
                                 return@AiSuggestionCard
                             }
                             if (!isAtpConnected) {
-                                aiError = "AI chưa kết nối. Đang thử kết nối lại..."
+                                aiError = errorAiNotConnected
                                 atpConnectionManager.bindService()
                                 return@AiSuggestionCard
                             }
@@ -294,12 +299,13 @@ fun WordFormScreen(
                                 
                                 val clearResult = atpConnectionManager.clearCache(chinese.trim())
                                 if (clearResult.isFailure) {
-                                    aiError = "Lỗi xoá cache: ${clearResult.exceptionOrNull()?.message}"
+                                    aiError = context.getString(R.string.error_clear_cache_failed, clearResult.exceptionOrNull()?.message ?: "")
                                     isTranslating = false
                                     return@launch
                                 }
                                 
                                 fetchAiSuggestion(
+                                    context = context,
                                     scope = scope,
                                     chinese = chinese,
                                     isAtpConnected = isAtpConnected,
@@ -369,14 +375,14 @@ fun AiSuggestionCard(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Kết quả từ AI Translate Portal:", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.ai_result_title), fontWeight = FontWeight.Bold)
                 
                 if (parcel.meanings.isNotEmpty()) {
-                    Text("Các nghĩa:", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(R.string.ai_meanings_header), fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
                     parcel.meanings.forEachIndexed { index, meaning ->
-                        Text("${index + 1}. ${meaning.meaning}")
+                        Text(stringResource(R.string.ai_meaning_item, index + 1, meaning.meaning))
                         Text(
-                            text = "    Cách dùng: ${meaning.usage}",
+                            text = stringResource(R.string.ai_usage_format, meaning.usage),
                             style = MaterialTheme.typography.bodySmall,
                             color = LocalContentColor.current.copy(alpha = 0.7f)
                         )
@@ -384,7 +390,7 @@ fun AiSuggestionCard(
 
                     if (parcel.note.isNotBlank()) {
                         Text(
-                            text = "Ghi chú: ${parcel.note}",
+                            text = stringResource(R.string.ai_note_format, parcel.note),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 8.dp),
                             color = LocalContentColor.current.copy(alpha = 0.7f)
@@ -408,7 +414,7 @@ fun AiSuggestionCard(
                             elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text("Sử dụng các nghĩa này", color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.button_use_meanings), color = MaterialTheme.colorScheme.primary)
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -421,13 +427,13 @@ fun AiSuggestionCard(
                             elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text("Xoá cache", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.button_clear_cache), color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
                 
                 Text(
-                    text = if (parcel.fromCache) "Cache" else "",
+                    text = if (parcel.fromCache) stringResource(R.string.label_cache) else "",
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 8.dp),
                     color = LocalContentColor.current.copy(alpha = 0.5f)
@@ -438,6 +444,7 @@ fun AiSuggestionCard(
 }
 
 private fun fetchAiSuggestion(
+    context: Context,
     scope: CoroutineScope,
     chinese: String,
     isAtpConnected: Boolean,
@@ -447,11 +454,11 @@ private fun fetchAiSuggestion(
     onFailure: (String) -> Unit
 ) {
     if (chinese.isBlank()) {
-        onFailure("Vui lòng nhập từ tiếng Trung trước.")
+        onFailure(context.getString(R.string.error_input_chinese_first))
         return
     }
     if (!isAtpConnected) {
-        onFailure("AI chưa kết nối. Đang thử kết nối lại...")
+        onFailure(context.getString(R.string.error_ai_not_connected))
         atpConnectionManager.bindService()
         return
     }
@@ -464,10 +471,10 @@ private fun fetchAiSuggestion(
             result.onSuccess { parcel ->
                 onSuccess(parcel)
             }.onFailure { err ->
-                onFailure("Lỗi kết nối: ${err.message}")
+                onFailure(context.getString(R.string.error_connection, err.message ?: ""))
             }
         } catch (t: Throwable) {
-            onFailure("Crash (Đã catch): ${t.javaClass.simpleName} - ${t.message}")
+            onFailure(context.getString(R.string.error_crash, t.javaClass.simpleName, t.message ?: ""))
             t.printStackTrace()
         }
     }

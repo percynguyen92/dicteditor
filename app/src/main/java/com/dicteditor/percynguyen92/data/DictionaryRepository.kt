@@ -254,70 +254,39 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
     ): Result<Int> = withContext(Dispatchers.Default) {
         if (findText.isEmpty()) return@withContext Result.success(0)
 
-        val regexOptions = if (!matchCase) setOf(RegexOption.IGNORE_CASE) else emptySet()
-        val regex = if (useRegex) {
-            try {
-                Regex(findText, regexOptions)
-            } catch (e: Exception) {
-                return@withContext Result.failure(e)
-            }
-        } else null
-
         mutex.withLock {
-            var totalReplacements = 0
-            val updated = allEntries.map { entry ->
-                // Neu scopeIds duoc chi dinh, chi xu ly nhung entry nam trong scope
-                if (scopeIds != null && entry.id !in scopeIds) return@map entry
-
-                var lineChanged = false
-                var newChinese = entry.chinese
-
-                if (useRegex && regex != null) {
-                    val matches = regex.findAll(newChinese).toList()
-                    if (matches.isNotEmpty()) {
-                        totalReplacements += matches.size
-                        lineChanged = true
-                        newChinese = newChinese.replace(regex, replaceText)
-                    }
-                } else {
-                    val count = newChinese.split(findText, ignoreCase = !matchCase).size - 1
-                    if (count > 0) {
-                        totalReplacements += count
-                        lineChanged = true
-                        newChinese = newChinese.replace(findText, replaceText, ignoreCase = !matchCase)
-                    }
-                }
-
-                val newMeanings = entry.meanings.map { meaning ->
-                    if (useRegex && regex != null) {
-                        val matches = regex.findAll(meaning).toList()
-                        if (matches.isNotEmpty()) {
-                            totalReplacements += matches.size
-                            lineChanged = true
-                            meaning.replace(regex, replaceText)
-                        } else meaning
-                    } else {
-                        val count = meaning.split(findText, ignoreCase = !matchCase).size - 1
-                        if (count > 0) {
-                            totalReplacements += count
-                            lineChanged = true
-                            meaning.replace(findText, replaceText, ignoreCase = !matchCase)
-                        } else meaning
-                    }
-                }
-
-                if (lineChanged) entry.copy(chinese = newChinese, meanings = newMeanings)
-                else entry
+            val scopedEntries = if (scopeIds != null) {
+                allEntries.filter { it.id in scopeIds }
+            } else {
+                allEntries
             }
 
-            if (totalReplacements > 0) {
+            val result = SearchEngine.replaceInEntries(
+                findText = findText,
+                replaceText = replaceText,
+                entries = scopedEntries,
+                useRegex = useRegex,
+                matchCase = matchCase
+            )
+
+            val replaceResult = result.getOrElse {
+                return@withContext Result.failure(it)
+            }
+
+            if (replaceResult.totalReplacements > 0) {
                 historyManager.saveToHistory(allEntries)
-                allEntries = ArrayList(updated)
+                val replacedMap = replaceResult.replacedEntries
+                for (i in allEntries.indices) {
+                    replacedMap[allEntries[i].id]?.let {
+                        allEntries[i] = it
+                    }
+                }
                 updateStateFlowsLocked()
             }
-            Result.success(totalReplacements)
+            Result.success(replaceResult.totalReplacements)
         }
     }
+
 
     suspend fun batchImport(rawText: String): ImportResult = withContext(Dispatchers.Default) {
         if (rawText.isBlank()) return@withContext ImportResult(0, 0, 0)

@@ -34,7 +34,8 @@ fun SearchBar(
     onToggleRegex: () -> Unit,
     onToggleMatchCase: () -> Unit,
     onReplaceClick: () -> Unit,
-    onCloseReplaceMode: () -> Unit
+    onCloseReplaceMode: () -> Unit,
+    searchError: String? = null
 ) {
     Column(
         modifier = Modifier
@@ -47,6 +48,7 @@ fun SearchBar(
         CustomOutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
+            isError = searchError != null,
             placeholder = { Text("Tìm kiếm...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Tìm kiếm") },
             trailingIcon = {
@@ -162,6 +164,7 @@ fun SearchBar(
 private fun CustomOutlinedTextField(
     value: String,
     onValueChange: (String) -> Unit,
+    isError: Boolean = false,
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
@@ -195,7 +198,7 @@ private fun CustomOutlinedTextField(
                 container = {
                     OutlinedTextFieldDefaults.Container(
                         enabled = true,
-                        isError = false,
+                        isError = isError,
                         interactionSource = interactionSource,
                         colors = colors,
                         shape = shape,

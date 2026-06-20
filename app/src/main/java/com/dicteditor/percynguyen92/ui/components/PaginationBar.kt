@@ -20,6 +20,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import dev.chrisbanes.haze.HazeState
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
 import com.dicteditor.percynguyen92.ui.components.staticGlassmorphism
@@ -75,7 +77,7 @@ fun PaginationBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardDoubleArrowLeft,
-                            contentDescription = "Đầu trang",
+                            contentDescription = stringResource(R.string.description_first_page),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -88,7 +90,7 @@ fun PaginationBar(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
-                            contentDescription = "Trang trước",
+                            contentDescription = stringResource(R.string.description_prev_page),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -103,7 +105,7 @@ fun PaginationBar(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "$currentStart-$currentEnd / $filteredCount từ",
+                        text = stringResource(R.string.label_pagination_info_format, currentStart, currentEnd, filteredCount),
                         style = MaterialTheme.typography.labelMedium,
                         textAlign = TextAlign.Center
                     )
@@ -125,7 +127,7 @@ fun PaginationBar(
                         modifier = Modifier.padding(top = 2.dp)
                     ) {
                         Text(
-                            text = "Trang ",
+                            text = stringResource(R.string.label_page),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -197,7 +199,7 @@ fun PaginationBar(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                            contentDescription = "Trang sau",
+                            contentDescription = stringResource(R.string.description_next_page),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -210,7 +212,7 @@ fun PaginationBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardDoubleArrowRight,
-                            contentDescription = "Trang cuối",
+                            contentDescription = stringResource(R.string.description_last_page),
                             modifier = Modifier.size(18.dp)
                         )
                     }

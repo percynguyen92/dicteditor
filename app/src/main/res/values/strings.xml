@@ -1,3 +1,128 @@
 <resources>
     <string name="app_name">DictEditor</string>
+    <string name="title_edit_word">Sửa từ</string>
+    <string name="title_add_word">Thêm từ mới</string>
+    <string name="back_description">Trở về</string>
+    <string name="label_chinese_word">Từ tiếng Trung</string>
+    <string name="label_meanings">Nghĩa</string>
+    <string name="error_input_chinese_first">Vui lòng nhập từ tiếng Trung trước.</string>
+    <string name="button_save">Lưu</string>
+    <string name="button_ai_suggestion">Gợi ý AI</string>
+    <string name="error_ai_not_connected">AI chưa kết nối. Đang thử kết nối lại&#8230;</string>
+    <string name="error_clear_cache_failed">Lỗi xoá cache: %1$s</string>
+    <string name="ai_result_title">Kết quả từ AI Translate Portal:</string>
+    <string name="ai_meanings_header">Các nghĩa:</string>
+    <string name="ai_meaning_item">%1$d. %2$s</string>
+    <string name="ai_usage_format">    Cách dùng: %1$s</string>
+    <string name="ai_note_format">Ghi chú: %1$s</string>
+    <string name="button_use_meanings">Sử dụng các nghĩa này</string>
+    <string name="button_clear_cache">Xoá cache</string>
+    <string name="label_cache">Cache</string>
+    <string name="error_connection">Lỗi kết nối: %1$s</string>
+    <string name="error_crash">Crash (Đã catch): %1$s - %2$s</string>
+
+    <!-- MainActivity -->
+    <string name="snackbar_updated_word">Đã cập nhật từ</string>
+    <string name="snackbar_added_word">Đã thêm từ mới vào list</string>
+    <string name="snackbar_ai_connected_ok">Kết nối AI (AIDL) đang hoạt động tốt.</string>
+    <string name="description_close">Đóng</string>
+
+    <!-- ExportActivity -->
+    <string name="toast_export_success">Xuất file thành công</string>
+    <string name="toast_export_error">Lỗi xuất file</string>
+    <string name="title_export">Xuất tệp</string>
+    <string name="button_copy_all">Copy tất cả</string>
+    <string name="button_export_to_txt">Export to txt</string>
+    <string name="clipboard_label_copied">Đã sao chép</string>
+    <string name="toast_copied_to_clipboard">Đã sao chép vào bộ nhớ tạm</string>
+
+    <!-- SearchBar -->
+    <string name="placeholder_search">Tìm kiếm&#8230;</string>
+    <string name="description_search">Tìm kiếm</string>
+    <string name="description_clear_search">Xoá tìm kiếm</string>
+    <string name="placeholder_replace">Thay thế bằng&#8230;</string>
+    <string name="button_replace">Thay thế</string>
+    <string name="description_close_replace_mode">Đóng chế độ thay thế</string>
+
+    <!-- AppTopBar -->
+    <string name="label_no_file_selected">Chưa chọn file</string>
+    <string name="label_word_count_format"> • %1$d từ</string>
+    <string name="badge_unsaved">Chưa lưu</string>
+    <string name="description_undo">Hoàn tác</string>
+    <string name="description_redo">Làm lại</string>
+    <string name="description_save_file">Lưu file</string>
+    <string name="description_menu">Thao tác menu</string>
+    <string name="menu_undo">Undo</string>
+    <string name="menu_redo">Redo</string>
+    <string name="menu_save">Lưu</string>
+    <string name="menu_open_file">Mở file</string>
+    <string name="menu_sort">Sắp xếp</string>
+    <string name="menu_sort_desc">Sắp xếp: Dài → Ngắn</string>
+    <string name="menu_sort_asc">Sắp xếp: Ngắn → Dài</string>
+    <string name="menu_find_replace">Tìm &amp; Thay thế</string>
+    <string name="menu_import">Import</string>
+    <string name="menu_check_ai">Kiểm tra kết nối AI</string>
+    <string name="menu_exit">Thoát</string>
+    <string name="status_pick_file">Hãy chọn một file để bắt đầu</string>
+    <string name="status_ready">Sẵn sàng</string>
+
+    <!-- BulkSelectionBar -->
+    <string name="label_selected_count">%1$d đã chọn</string>
+    <string name="button_select_all">Chọn tất cả</string>
+    <string name="button_clear_selection">Bỏ chọn</string>
+    <string name="button_bulk_delete">Xoá đã chọn</string>
+    <string name="button_bulk_export">Xuất đã chọn</string>
+    <string name="description_add_word">Thêm từ</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_confirm">Xác nhận</string>
+    <string name="dialog_cancel">Huỷ</string>
+    <string name="dialog_save">Lưu</string>
+    <string name="dialog_discard">Bỏ qua</string>
+    <string name="dialog_unsaved_changes_title">Thay đổi chưa lưu!</string>
+    <string name="dialog_exit_message">Ứng dụng của bạn có thay đổi từ điển chưa lưu về file gốc. Hãy lưu trước khi rời khỏi hoặc bỏ qua.</string>
+    <string name="dialog_save_and_exit">Lưu &amp; Thoát</string>
+    <string name="dialog_discard_changes">Bỏ qua đổi thay</string>
+    <string name="dialog_close_file_message">Bạn có thay đổi chưa lưu. Hãy lưu trước khi đóng file hoặc bỏ qua.</string>
+    <string name="dialog_save_and_close">Lưu &amp; Đóng</string>
+    <string name="dialog_bulk_delete_title">Xóa nhiều từ?</string>
+    <string name="dialog_bulk_delete_message">Bạn có chắc chắn muốn xóa %1$d từ đã chọn?</string>
+    <string name="dialog_delete">Xóa</string>
+    <string name="dialog_batch_import_title">Nhập từ hàng loạt (Batch)</string>
+    <string name="dialog_batch_import_message">Dán các dòng từ điển có định dạng \'tiếng_Trung=nghĩa1/nghĩa2\'. \nMỗi từ nằm trên 1 dòng độc lập.\nTrùng lặp với từ đã có sẽ được gộp vào phía trước nghĩa cũ( ưu tiên hơn)</string>
+    <string name="dialog_batch_import_hint">Ví dụ.\n龙=rồng/long\n火=lửa/hỏa\n水=nước/thủy</string>
+    <string name="dialog_batch_import_error_empty">Nội dung paste không được rỗng</string>
+    <string name="dialog_import">Import</string>
+    <string name="dialog_ai_error_title">Lỗi kết nối AI</string>
+    <string name="dialog_ai_error_cause">Nguyên nhân: %1$s</string>
+    <string name="dialog_ai_connecting_title">Đang kết nối AI&#8230;</string>
+    <string name="dialog_ai_connecting_message">Vui lòng đợi một chút hoặc kiểm tra xem ứng dụng AI Portal có đang chạy không.</string>
+    <!-- RecentFilesView -->
+    <string name="title_cannot_open_file">Không thể mở file</string>
+    <string name="message_file_open_error">File không còn tồn tại hoặc bị lỗi không thể đọc dữ liệu.\n\nĐường dẫn: %1$s\n\nChi tiết lỗi: %2$s\n\nFile này đã được xóa khỏi danh sách gần đây.</string>
+    <string name="button_ok">Đồng ý</string>
+    <string name="empty_recent_title">Chưa mở file dữ liệu</string>
+    <string name="empty_recent_desc">Hãy nhấn mở file để duyệt, tìm kiếm và chỉnh sửa danh sách từ điển của bạn dưới bộ nhớ máy.</string>
+    <string name="button_open_dict_file">Mở file từ điển (.txt)</string>
+    <string name="title_recent_files">Mở file gần đây</string>
+    <string name="button_open_other_file">Mở file khác</string>
+    <!-- MainContentArea -->
+    <string name="empty_search_title">Không tìm thấy kết quả</string>
+    <string name="empty_search_desc">Không có từ nào chứa cụm từ \'%1$s\' trong file từ điển của bạn.</string>
+    <string name="button_clear_filter">Xóa lọc</string>
+    <string name="empty_list_title">Danh sách trống</string>
+    <string name="empty_list_desc">File từ điển của bạn không chứa dữ liệu hợp lệ hoặc chưa thêm từ nào.</string>
+    <!-- PaginationBar -->
+    <string name="description_first_page">Đầu trang</string>
+    <string name="description_prev_page">Trang trước</string>
+    <string name="description_next_page">Trang sau</string>
+    <string name="description_last_page">Trang cuối</string>
+    <string name="label_pagination_info_format">%1$d-%2$d / %3$d từ</string>
+    <string name="label_page">Trang </string>
+    <!-- DictEntryItemRow -->
+    <string name="label_no_meanings">Chưa có nghĩa dịch</string>
+    <string name="description_edit_word">Chỉnh sửa từ</string>
+    <string name="description_delete_word">Xóa từ</string>
+    <string name="dialog_delete_word_title">Xóa từ này?</string>
+    <string name="dialog_delete_word_message">Bạn có chắc chắn muốn xóa từ \'%1$s\' khỏi list từ điển?</string>
 </resources>

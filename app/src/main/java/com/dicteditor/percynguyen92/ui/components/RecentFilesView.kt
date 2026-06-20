@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.utils.getFileName
 import dev.chrisbanes.haze.HazeState
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
@@ -39,13 +41,13 @@ fun RecentFilesView(
         val displayPath = uri.path ?: uri.toString()
         HazeAlertDialog(
             onDismissRequest = onClearError,
-            title = { Text("Không thể mở file") },
+            title = { Text(stringResource(R.string.title_cannot_open_file)) },
             text = {
-                Text("File không còn tồn tại hoặc bị lỗi không thể đọc dữ liệu.\n\nĐường dẫn: $displayPath\n\nChi tiết lỗi: $errorMsg\n\nFile này đã được xóa khỏi danh sách gần đây.")
+                Text(stringResource(R.string.message_file_open_error, displayPath, errorMsg))
             },
             confirmButton = {
                 TextButton(onClick = onClearError) {
-                    Text("Đồng ý")
+                    Text(stringResource(R.string.button_ok))
                 }
             },
             hazeState = hazeState
@@ -54,9 +56,9 @@ fun RecentFilesView(
     if (recentFiles.isEmpty()) {
         EmptyStateView(
             icon = Icons.Default.Info,
-            title = "Chưa mở file dữ liệu",
-            description = "Hãy nhấn mở file để duyệt, tìm kiếm và chỉnh sửa danh sách từ điển của bạn dưới bộ nhớ máy.",
-            buttonText = "Mở file từ điển (.txt)",
+            title = stringResource(R.string.empty_recent_title),
+            description = stringResource(R.string.empty_recent_desc),
+            buttonText = stringResource(R.string.button_open_dict_file),
             onButtonClick = onOpenNewClick
         )
     } else {
@@ -75,7 +77,7 @@ fun RecentFilesView(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Mở file gần đây",
+                text = stringResource(R.string.title_recent_files),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -156,7 +158,7 @@ fun RecentFilesView(
             ) {
                 Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Mở file khác", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.button_open_other_file), style = MaterialTheme.typography.labelLarge)
             }
             Spacer(modifier = Modifier.height(32.dp))
         }

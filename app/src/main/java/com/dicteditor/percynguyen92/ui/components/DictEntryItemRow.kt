@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.data.DictEntry
 
 import dev.chrisbanes.haze.HazeState
@@ -108,7 +110,7 @@ fun DictEntryItemRow(
                         )
                     } else {
                         Text(
-                            text = "Chưa có nghĩa dịch",
+                            text = stringResource(R.string.label_no_meanings),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -130,7 +132,7 @@ fun DictEntryItemRow(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Chỉnh sửa từ",
+                                contentDescription = stringResource(R.string.description_edit_word),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -141,7 +143,7 @@ fun DictEntryItemRow(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Xóa từ",
+                                contentDescription = stringResource(R.string.description_delete_word),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -155,8 +157,8 @@ fun DictEntryItemRow(
     if (showDeleteConfirmDialog) {
         HazeAlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text("Xóa từ này?", style = MaterialTheme.typography.titleLarge) },
-            text = { Text("Bạn có chắc chắn muốn xóa từ '${entry.chinese}' khỏi list từ điển?", style = MaterialTheme.typography.bodySmall) },
+            title = { Text(stringResource(R.string.dialog_delete_word_title), style = MaterialTheme.typography.titleLarge) },
+            text = { Text(stringResource(R.string.dialog_delete_word_message, entry.chinese), style = MaterialTheme.typography.bodySmall) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -165,12 +167,12 @@ fun DictEntryItemRow(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Xóa", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.dialog_delete), style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text("Hủy", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.dialog_cancel), style = MaterialTheme.typography.labelLarge)
                 }
             },
             hazeState = hazeState

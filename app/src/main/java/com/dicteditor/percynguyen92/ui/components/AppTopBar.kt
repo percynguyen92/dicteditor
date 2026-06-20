@@ -17,6 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.utils.getFileName
 import dev.chrisbanes.haze.HazeState
 
@@ -50,7 +52,8 @@ fun AppTopBar(
     onReplaceQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
     onReplaceClick: () -> Unit,
-    onCloseReplaceMode: () -> Unit
+    onCloseReplaceMode: () -> Unit,
+    searchError: String? = null
 ) {
     val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
@@ -87,13 +90,14 @@ fun AppTopBar(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
+                        val noFileSelected = stringResource(R.string.label_no_file_selected)
                         val fileName by produceState(initialValue = "...", key1 = openedFileUri) {
                             value = if (openedFileUri != null) {
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                     getFileName(context, openedFileUri)
                                 }
                             } else {
-                                "Chưa chọn file"
+                                noFileSelected
                             }
                         }
 
@@ -103,6 +107,8 @@ fun AppTopBar(
                         val wordCountStyle = MaterialTheme.typography.labelSmall.toSpanStyle().copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        
+                        val wordCountFormat = stringResource(R.string.label_word_count_format, totalWords)
 
                         Text(
                             text = buildAnnotatedString {
@@ -111,7 +117,7 @@ fun AppTopBar(
                                 }
                                 if (openedFileUri != null) {
                                     withStyle(wordCountStyle) {
-                                        append(" • $totalWords từ")
+                                        append(wordCountFormat)
                                     }
                                 }
                             },
@@ -129,7 +135,7 @@ fun AppTopBar(
                                 modifier = Modifier.padding(end = 8.dp)
                             ) {
                                 Text(
-                                    text = "Chưa lưu",
+                                    text = stringResource(R.string.badge_unsaved),
                                     color = Color.White,
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -145,7 +151,7 @@ fun AppTopBar(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Hoàn tác",
+                                    contentDescription = stringResource(R.string.description_undo),
                                     tint = if (canUndo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
                             }
@@ -156,7 +162,7 @@ fun AppTopBar(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowForward,
-                                    contentDescription = "Làm lại",
+                                    contentDescription = stringResource(R.string.description_redo),
                                     tint = if (canRedo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
                             }
@@ -167,7 +173,7 @@ fun AppTopBar(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Lưu file",
+                                    contentDescription = stringResource(R.string.description_save_file),
                                     tint = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
                             }
@@ -181,7 +187,7 @@ fun AppTopBar(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Thao tác menu"
+                                    contentDescription = stringResource(R.string.description_menu)
                                 )
                             }
 
@@ -192,7 +198,7 @@ fun AppTopBar(
                                 modifier = Modifier.hazeGlassmorphism(hazeState, cornerRadius = 12)
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Mở file") },
+                                    text = { Text(stringResource(R.string.menu_open_file)) },
                                     leadingIcon = { Icon(Icons.Default.List, contentDescription = "Open file") },
                                     onClick = {
                                         menuExpanded = false
@@ -203,7 +209,7 @@ fun AppTopBar(
                                 HorizontalDivider()
                                 if (openedFileUri != null) {
                                     DropdownMenuItem(
-                                        text = { Text("Sắp xếp: Dài → Ngắn") },
+                                        text = { Text(stringResource(R.string.menu_sort_desc)) },
                                         leadingIcon = { Icon(Icons.Default.List, contentDescription = "Sort Long to Short") },
                                         onClick = {
                                             menuExpanded = false
@@ -212,7 +218,7 @@ fun AppTopBar(
                                         modifier = Modifier.testTag("sort_by_length_desc_menu")
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Sắp xếp: Ngắn → Dài") },
+                                        text = { Text(stringResource(R.string.menu_sort_asc)) },
                                         leadingIcon = { Icon(Icons.Default.List, contentDescription = "Sort Short to Long") },
                                         onClick = {
                                             menuExpanded = false
@@ -221,7 +227,7 @@ fun AppTopBar(
                                         modifier = Modifier.testTag("sort_by_length_asc_menu")
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Tìm & Thay thế") },
+                                        text = { Text(stringResource(R.string.menu_find_replace)) },
                                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Find replace") },
                                         onClick = {
                                             menuExpanded = false
@@ -230,7 +236,7 @@ fun AppTopBar(
                                         modifier = Modifier.testTag("find_replace_menu")
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Import") },
+                                        text = { Text(stringResource(R.string.menu_import)) },
                                         leadingIcon = { Icon(Icons.Default.Add, contentDescription = "Batch import") },
                                         onClick = {
                                             menuExpanded = false
@@ -241,7 +247,7 @@ fun AppTopBar(
                                 }
                                 HorizontalDivider()
                                 DropdownMenuItem(
-                                    text = { Text("Kiểm tra kết nối AI") },
+                                    text = { Text(stringResource(R.string.menu_check_ai)) },
                                     leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = "Check AI Connection") },
                                     onClick = {
                                         menuExpanded = false
@@ -262,8 +268,9 @@ fun AppTopBar(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val defaultStatus = if (openedFileUri == null) stringResource(R.string.status_pick_file) else stringResource(R.string.status_ready)
                     Text(
-                        text = statusMessage.ifEmpty { if (openedFileUri == null) "Hãy chọn một file để bắt đầu" else "Sẵn sàng" },
+                        text = statusMessage.ifEmpty { defaultStatus },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -285,7 +292,8 @@ fun AppTopBar(
                         onToggleRegex = onToggleRegex,
                         onToggleMatchCase = onToggleMatchCase,
                         onReplaceClick = onReplaceClick,
-                        onCloseReplaceMode = onCloseReplaceMode
+                        onCloseReplaceMode = onCloseReplaceMode,
+                        searchError = searchError
                     )
                 }
             }

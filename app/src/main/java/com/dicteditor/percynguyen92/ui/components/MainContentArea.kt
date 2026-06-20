@@ -7,12 +7,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.data.DictEntry
 import dev.chrisbanes.haze.HazeState
 
@@ -36,6 +39,7 @@ fun MainContentArea(
     onEditClick: (DictEntry) -> Unit,
     onDeleteConfirm: (String) -> Unit,
     onSelectedChange: (String, Boolean) -> Unit,
+    searchError: String? = null,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -55,20 +59,28 @@ fun MainContentArea(
             }
         } else if (displayEntries.isEmpty() && !isLoading) {
             Box(modifier = Modifier.padding(contentPadding)) {
-                if (searchQuery.isNotEmpty()) {
+                if (searchError != null) {
+                    EmptyStateView(
+                        icon = Icons.Default.Warning,
+                        title = "Lỗi Regex",
+                        description = searchError,
+                        buttonText = stringResource(R.string.button_clear_filter),
+                        onButtonClick = onSearchClear
+                    )
+                } else if (searchQuery.isNotEmpty()) {
                     EmptyStateView(
                         icon = Icons.Default.Search,
-                        title = "Không tìm thấy kết quả",
-                        description = "Không có từ nào chứa cụm từ '$searchQuery' trong file từ điển của bạn.",
-                        buttonText = "Xóa lọc",
+                        title = stringResource(R.string.empty_search_title),
+                        description = stringResource(R.string.empty_search_desc, searchQuery),
+                        buttonText = stringResource(R.string.button_clear_filter),
                         onButtonClick = onSearchClear
                     )
                 } else {
                     EmptyStateView(
                         icon = Icons.Default.Info,
-                        title = "Danh sách trống",
-                        description = "File từ điển của bạn không chứa dữ liệu hợp lệ hoặc chưa thêm từ nào.",
-                        buttonText = "Thêm từ mới",
+                        title = stringResource(R.string.empty_list_title),
+                        description = stringResource(R.string.empty_list_desc),
+                        buttonText = stringResource(R.string.title_add_word),
                         onButtonClick = onAddWordClick
                     )
                 }

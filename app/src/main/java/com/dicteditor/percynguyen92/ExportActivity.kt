@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.ui.components.appBackground
 import com.dicteditor.percynguyen92.ui.components.glassTextFieldColors
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
@@ -89,13 +90,18 @@ fun ExportScreen(
     val scope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
     
+    val exportSuccessMsg = stringResource(R.string.toast_export_success)
+    val exportErrorMsg = stringResource(R.string.toast_export_error)
+    val copiedLabel = stringResource(R.string.clipboard_label_copied)
+    val copiedToClipboardMsg = stringResource(R.string.toast_copied_to_clipboard)
+    
     val exportFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain")
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val success = writeTextToUri(context, uri, text)
-            val message = if (success) "Xuất file thành công" else "Lỗi xuất file"
+            val message = if (success) exportSuccessMsg else exportErrorMsg
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
@@ -105,13 +111,13 @@ fun ExportScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Xuất tệp") },
+                    title = { Text(stringResource(R.string.title_export)) },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
                     ),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Trở về")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_description))
                         }
                     }
                 )
@@ -140,12 +146,12 @@ fun ExportScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Button(
-                        onClick = { copyToClipboard(context, text) },
+                        onClick = { copyToClipboard(context, text, copiedLabel, copiedToClipboardMsg) },
                         modifier = Modifier.hazeGlassmorphism(hazeState, cornerRadius = 12),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp)
                     ) {
-                        Text("Copy tất cả", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.button_copy_all), color = MaterialTheme.colorScheme.primary)
                     }
                     
                     Button(
@@ -156,7 +162,7 @@ fun ExportScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp)
                     ) {
-                        Text("Export to txt", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.button_export_to_txt), color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -179,10 +185,10 @@ private suspend fun writeTextToUri(context: Context, uri: Uri, text: String): Bo
         }
     }
 
-private fun copyToClipboard(context: Context, text: String) {
+private fun copyToClipboard(context: Context, text: String, label: String, toastMessage: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Đã sao chép", text)
+    val clip = ClipData.newPlainText(label, text)
     clipboard.setPrimaryClip(clip)
-    Toast.makeText(context, "Đã sao chép vào bộ nhớ tạm", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
 }
 
