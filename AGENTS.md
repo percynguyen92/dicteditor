@@ -1,7 +1,24 @@
+# Overview
+
+This project is a dictionary editor for Android.
+It uses Material 3 design system and follows the MVVM architecture.
+It uses **GitNexus** for code intelligence.
+**You MUST use GitNexus to understand code, assess impact, and navigate safely.**
+
+# DO NOT
+- Write code without knowing about best practices.
+- Hard code text or magic number in to code. Use @strings.xml instead.
+- Hard code colors, dimensions, or any resource in code. Use @color.xml, @dimen.xml, @drawable.xml, etc instead.
+  - For Jetpack Compose UI, prioritize styling through `Color.kt` and `MaterialTheme.colorScheme`.
+  - Use `colors.xml` exclusively for system-level styles, themes, and manifest resource configurations.
+  - For custom, shared, or dynamic view IDs, declare them in `ids.xml` under `res/values/` rather than hardcoding.
+
+
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **dicteditor** (692 symbols, 1576 relationships, 57 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **dicteditor** (747 symbols, 1670 relationships, 62 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -22,22 +39,22 @@ This project is indexed by GitNexus as **dicteditor** (692 symbols, 1576 relatio
 
 ## Resources
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/dicteditor/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/dicteditor/clusters` | All functional areas |
-| `gitnexus://repo/dicteditor/processes` | All execution flows |
-| `gitnexus://repo/dicteditor/process/{name}` | Step-by-step execution trace |
+| Resource                                    | Use for                                  |
+| ------------------------------------------- | ---------------------------------------- |
+| `gitnexus://repo/dicteditor/context`        | Codebase overview, check index freshness |
+| `gitnexus://repo/dicteditor/clusters`       | All functional areas                     |
+| `gitnexus://repo/dicteditor/processes`      | All execution flows                      |
+| `gitnexus://repo/dicteditor/process/{name}` | Step-by-step execution trace             |
 
 ## CLI
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Task                                         | Read this skill file                                        |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md`       |
+| Blast radius / "What breaks if I change X?"  | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?"             | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md`       |
+| Rename / extract / split / refactor          | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md`     |
+| Tools, resources, schema reference           | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`           |
+| Index, status, clean, wiki CLI commands      | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md`             |
 
 <!-- gitnexus:end -->

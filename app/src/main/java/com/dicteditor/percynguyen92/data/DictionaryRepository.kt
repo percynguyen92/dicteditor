@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 sealed interface EntryOpResult {
     object Success : EntryOpResult
     object Duplicate : EntryOpResult
+    object Merged : EntryOpResult
     object Invalid : EntryOpResult
 }
 
@@ -190,11 +191,17 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
             val entryIndex = allEntries.indexOfFirst { it.id == id }
             if (entryIndex == -1) return@withLock EntryOpResult.Invalid
 
-            val exists = allEntries.indices.any { i ->
-                i != entryIndex && allEntries[i].chinese.equals(cleanChinese, ignoreCase = true)
+            val duplicateIndex = allEntries.indexOfFirst { i ->
+                i.chinese.equals(cleanChinese, ignoreCase = true) && i.id != id
             }
-            if (exists) {
-                return@withLock EntryOpResult.Duplicate
+            if (duplicateIndex != -1) {
+                historyManager.saveToHistory(allEntries)
+                val duplicateEntry = allEntries[duplicateIndex]
+                val mergedMeanings = (duplicateEntry.meanings + meanings.map { it.trim() }.filter { it.isNotEmpty() }).distinct()
+                allEntries[duplicateIndex] = duplicateEntry.copy(meanings = mergedMeanings)
+                allEntries.removeAt(entryIndex)
+                updateStateFlowsLocked()
+                return@withLock EntryOpResult.Merged
             }
 
             historyManager.saveToHistory(allEntries)

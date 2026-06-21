@@ -312,6 +312,7 @@ class DictionaryViewModel : ViewModel() {
             val result = repository.addEntry(chinese, meanings)
             when (result) {
                 EntryOpResult.Success -> return true
+                EntryOpResult.Merged -> return false
                 EntryOpResult.Duplicate -> {
                     _uiEvents.emit(UiSnackbarEvent("Từ '$chinese' đã tồn tại trong từ điển, bỏ qua!", SnackbarType.ERROR))
                     return false
@@ -323,18 +324,10 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 
-    suspend fun updateEntry(id: String, chinese: String, meanings: List<String>): Boolean {
+    suspend fun updateEntry(id: String, chinese: String, meanings: List<String>): EntryOpResult {
         incrementLoading()
         try {
-            val result = repository.updateEntry(id, chinese, meanings)
-            when (result) {
-                EntryOpResult.Success -> return true
-                EntryOpResult.Duplicate -> {
-                    _uiEvents.emit(UiSnackbarEvent("Từ '$chinese' đã trùng với một từ khác trong từ điển!", SnackbarType.ERROR))
-                    return false
-                }
-                EntryOpResult.Invalid -> return false
-            }
+            return repository.updateEntry(id, chinese, meanings)
         } finally {
             decrementLoading()
         }

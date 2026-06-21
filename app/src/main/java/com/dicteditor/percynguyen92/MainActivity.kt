@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
 import com.dicteditor.percynguyen92.data.DictEntry
+import com.dicteditor.percynguyen92.data.EntryOpResult
 import com.dicteditor.percynguyen92.ui.components.AppTopBar
 import com.dicteditor.percynguyen92.ui.components.BulkSelectionBar
 import com.dicteditor.percynguyen92.ui.components.MainContentArea
@@ -97,6 +99,8 @@ fun DictEditorApp(
     onExit: () -> Unit
 ) {
     val context = LocalContext.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val hazeState = remember { HazeState() }
 
     // State flows from ViewModel
@@ -194,6 +198,9 @@ fun DictEditorApp(
     val wordFormLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        focusManager.clearFocus()
+        keyboardController?.hide()
+
         if (result.resultCode != Activity.RESULT_OK) {
             editEntryTarget = null
             return@rememberLauncherForActivityResult
@@ -202,12 +209,28 @@ fun DictEditorApp(
         val data = result.data ?: return@rememberLauncherForActivityResult
         val chinese = data.getStringExtra("RESULT_CHINESE") ?: return@rememberLauncherForActivityResult
         val meanings = data.getStringArrayExtra("RESULT_MEANINGS")?.toList() ?: return@rememberLauncherForActivityResult
+        val resultEntryId = data.getStringExtra("RESULT_ENTRY_ID")
         
         coroutineScope.launch {
             val target = editEntryTarget
-            if (target != null) {
-                val ok = viewModel.updateEntry(target.id, chinese, meanings)
-                if (ok) snackbarHostState.showSnackbar(CustomSnackbarVisuals(snackbarUpdatedWord, type = SnackbarType.SUCCESS))
+            val finalId = resultEntryId ?: target?.id
+            
+            if (finalId != null) {
+                val opResult = viewModel.updateEntry(finalId, chinese, meanings)
+                when (opResult) {
+                    EntryOpResult.Success -> {
+                        snackbarHostState.showSnackbar(CustomSnackbarVisuals(snackbarUpdatedWord, type = SnackbarType.SUCCESS))
+                    }
+                    EntryOpResult.Merged -> {
+                        val mergedMsg = context.getString(R.string.snackbar_merged_word, chinese)
+                        snackbarHostState.showSnackbar(CustomSnackbarVisuals(mergedMsg, type = SnackbarType.SUCCESS))
+                    }
+                    EntryOpResult.Duplicate -> {
+                        val dupMsg = context.getString(R.string.error_duplicate_word_fallback, chinese)
+                        snackbarHostState.showSnackbar(CustomSnackbarVisuals(dupMsg, type = SnackbarType.ERROR))
+                    }
+                    else -> {}
+                }
                 editEntryTarget = null
             } else {
                 val ok = viewModel.addEntry(chinese, meanings)
@@ -233,6 +256,7 @@ fun DictEditorApp(
                 searchMatchCase = searchMatchCase,
                 statusMessage = statusMessage,
                 searchError = searchError,
+                isAtpConnected = isAtpConnected,
                 onUndoClick = viewModel::undo,
                 onRedoClick = viewModel::redo,
                 onSaveClick = { viewModel.saveFile(context) },
@@ -334,8 +358,64 @@ fun DictEditorApp(
                 )
             }
         },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
+        snackbarHost = {}
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(hazeState)
+        ) {
+            MainContentArea(
+                hazeState = hazeState,
+                openedFileUri = openedFileUri,
+                isLoading = isLoading,
+                displayEntries = displayEntries,
+                recentFiles = recentFiles,
+                fileLoadError = fileLoadError,
+                onClearError = viewModel::clearFileLoadError,
+                searchQuery = searchQuery,
+                selectedIds = selectedIds,
+                highlightedIds = highlightedIds,
+                isBulkMode = isBulkMode,
+                onFileClick = { uri -> viewModel.loadFile(context, uri) },
+                onOpenNewClick = { filePickerLauncher.launch(arrayOf("text/plain", "*/*")) },
+                onSearchClear = { viewModel.setSearchQuery("") },
+                searchError = searchError,
+                onAddWordClick = {
+                    editEntryTarget = null
+                    val intent = Intent(context, WordFormActivity::class.java).apply {
+                        putExtra("EXTRA_EDIT_MODE", false)
+                    }
+                    wordFormLauncher.launch(intent)
+                },
+                onEditClick = { entry ->
+                    editEntryTarget = entry
+                    val intent = Intent(context, WordFormActivity::class.java).apply {
+                        putExtra("EXTRA_EDIT_MODE", true)
+                        putExtra("EXTRA_ENTRY_ID", entry.id)
+                        putExtra("EXTRA_CHINESE", entry.chinese)
+                        putExtra("EXTRA_MEANINGS", entry.meanings.toTypedArray())
+                    }
+                    wordFormLauncher.launch(intent)
+                },
+                onDeleteConfirm = viewModel::deleteEntry,
+                onSelectedChange = { id, isChecked ->
+                    if (isChecked) {
+                        selectedIds[id] = true
+                    } else {
+                        selectedIds.remove(id)
+                    }
+                },
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = innerPadding
+            )
+
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = innerPadding.calculateTopPadding())
+            ) { data ->
                 val isDark = isSystemInDarkTheme()
                 val type = (data.visuals as? CustomSnackbarVisuals)?.type ?: SnackbarType.INFO
                 val textColor = when (type) {
@@ -374,56 +454,6 @@ fun DictEditorApp(
                     }
                 }
             }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSource(hazeState)
-        ) {
-            MainContentArea(
-                hazeState = hazeState,
-                openedFileUri = openedFileUri,
-                isLoading = isLoading,
-                displayEntries = displayEntries,
-                recentFiles = recentFiles,
-                fileLoadError = fileLoadError,
-                onClearError = viewModel::clearFileLoadError,
-                searchQuery = searchQuery,
-                selectedIds = selectedIds,
-                highlightedIds = highlightedIds,
-                isBulkMode = isBulkMode,
-                onFileClick = { uri -> viewModel.loadFile(context, uri) },
-                onOpenNewClick = { filePickerLauncher.launch(arrayOf("text/plain", "*/*")) },
-                onSearchClear = { viewModel.setSearchQuery("") },
-                searchError = searchError,
-                onAddWordClick = {
-                    editEntryTarget = null
-                    val intent = Intent(context, WordFormActivity::class.java).apply {
-                        putExtra("EXTRA_EDIT_MODE", false)
-                    }
-                    wordFormLauncher.launch(intent)
-                },
-                onEditClick = { entry ->
-                    editEntryTarget = entry
-                    val intent = Intent(context, WordFormActivity::class.java).apply {
-                        putExtra("EXTRA_EDIT_MODE", true)
-                        putExtra("EXTRA_CHINESE", entry.chinese)
-                        putExtra("EXTRA_MEANINGS", entry.meanings.toTypedArray())
-                    }
-                    wordFormLauncher.launch(intent)
-                },
-                onDeleteConfirm = viewModel::deleteEntry,
-                onSelectedChange = { id, isChecked ->
-                    if (isChecked) {
-                        selectedIds[id] = true
-                    } else {
-                        selectedIds.remove(id)
-                    }
-                },
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = innerPadding
-            )
         }
     }
 

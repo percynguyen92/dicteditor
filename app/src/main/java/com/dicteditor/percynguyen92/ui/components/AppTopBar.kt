@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.utils.getFileName
 import dev.chrisbanes.haze.HazeState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 
 @Composable
 fun AppTopBar(
@@ -53,7 +55,8 @@ fun AppTopBar(
     onClearSearch: () -> Unit,
     onReplaceClick: () -> Unit,
     onCloseReplaceMode: () -> Unit,
-    searchError: String? = null
+    searchError: String? = null,
+    isAtpConnected: Boolean = false
 ) {
     val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
@@ -85,7 +88,7 @@ fun AppTopBar(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "DictEditor",
+                            text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -199,7 +202,7 @@ fun AppTopBar(
                             ) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.menu_open_file)) },
-                                    leadingIcon = { Icon(Icons.Default.List, contentDescription = "Open file") },
+                                    leadingIcon = { Icon(Icons.Default.List, contentDescription = stringResource(R.string.menu_open_file)) },
                                     onClick = {
                                         menuExpanded = false
                                         onOpenFileClick()
@@ -210,7 +213,7 @@ fun AppTopBar(
                                 if (openedFileUri != null) {
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.menu_sort_desc)) },
-                                        leadingIcon = { Icon(Icons.Default.List, contentDescription = "Sort Long to Short") },
+                                        leadingIcon = { Icon(Icons.Default.List, contentDescription = stringResource(R.string.menu_sort_desc)) },
                                         onClick = {
                                             menuExpanded = false
                                             onSortDefaultLengthDescending()
@@ -219,7 +222,7 @@ fun AppTopBar(
                                     )
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.menu_sort_asc)) },
-                                        leadingIcon = { Icon(Icons.Default.List, contentDescription = "Sort Short to Long") },
+                                        leadingIcon = { Icon(Icons.Default.List, contentDescription = stringResource(R.string.menu_sort_asc)) },
                                         onClick = {
                                             menuExpanded = false
                                             onSortLengthAscending()
@@ -228,7 +231,7 @@ fun AppTopBar(
                                     )
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.menu_find_replace)) },
-                                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Find replace") },
+                                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.menu_find_replace)) },
                                         onClick = {
                                             menuExpanded = false
                                             onFindReplaceClick()
@@ -237,7 +240,7 @@ fun AppTopBar(
                                     )
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.menu_import)) },
-                                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = "Batch import") },
+                                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.menu_import)) },
                                         onClick = {
                                             menuExpanded = false
                                             onBatchImportClick()
@@ -247,8 +250,22 @@ fun AppTopBar(
                                 }
                                 HorizontalDivider()
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.menu_check_ai)) },
-                                    leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = "Check AI Connection") },
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(10.dp)
+                                                    .background(
+                                                        color = if (isAtpConnected) Color(0xFF4CAF50) else Color.Gray,
+                                                        shape = CircleShape
+                                                    )
+                                            )
+                                            Text(if (isAtpConnected) stringResource(R.string.label_atp_online) else stringResource(R.string.label_atp_offline))
+                                        }
+                                    },
                                     onClick = {
                                         menuExpanded = false
                                         onCheckAiConnectionClick()

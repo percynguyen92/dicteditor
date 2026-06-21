@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalFocusManager
 import com.dicteditor.percynguyen92.ui.components.glassTextFieldColors
 
 @Composable
@@ -37,6 +38,11 @@ fun SearchBar(
     onCloseReplaceMode: () -> Unit,
     searchError: String? = null
 ) {
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(Unit) {
+        focusManager.clearFocus()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()

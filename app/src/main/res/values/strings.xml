@@ -5,6 +5,10 @@
     <string name="back_description">Trở về</string>
     <string name="label_chinese_word">Từ tiếng Trung</string>
     <string name="label_meanings">Nghĩa</string>
+    <string name="label_add_meaning">Thêm nghĩa mới</string>
+    <string name="description_remove">Xoá bỏ</string>
+    <string name="description_edit_meaning">Chỉnh sửa</string>
+    <string name="description_drag_to_reorder">Kéo thả để sắp xếp</string>
     <string name="error_input_chinese_first">Vui lòng nhập từ tiếng Trung trước.</string>
     <string name="button_save">Lưu</string>
     <string name="button_ai_suggestion">Gợi ý AI</string>
@@ -25,6 +29,8 @@
     <string name="snackbar_updated_word">Đã cập nhật từ</string>
     <string name="snackbar_added_word">Đã thêm từ mới vào list</string>
     <string name="snackbar_ai_connected_ok">Kết nối AI (AIDL) đang hoạt động tốt.</string>
+    <string name="snackbar_merged_word">Từ \'%1$s\' đã trùng, tiến hành gộp nghĩa của 2 từ!</string>
+    <string name="error_duplicate_word_fallback">Từ \'%1$s\' đã trùng với một từ khác trong từ điển!</string>
     <string name="description_close">Đóng</string>
 
     <!-- ExportActivity -->
@@ -125,4 +131,8 @@
     <string name="description_delete_word">Xóa từ</string>
     <string name="dialog_delete_word_title">Xóa từ này?</string>
     <string name="dialog_delete_word_message">Bạn có chắc chắn muốn xóa từ \'%1$s\' khỏi list từ điển?</string>
+
+    <!-- ATP Connection Status -->
+    <string name="label_atp_online">ATP online</string>
+    <string name="label_atp_offline">ATP offline</string>
 </resources>
