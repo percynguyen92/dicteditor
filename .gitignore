@@ -21,3 +21,6 @@ debug.keystore
 .claude/
 .kiro/
 .gemini/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
