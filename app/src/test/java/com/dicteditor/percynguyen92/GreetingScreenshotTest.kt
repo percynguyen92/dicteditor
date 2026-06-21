@@ -48,10 +48,15 @@ class GreetingScreenshotTest {
           searchQuery = "Hello",
           searchUseRegex = true,
           searchMatchCase = false,
+          isReplaceMode = false,
+          replaceQuery = "",
           onSearchQueryChange = {},
+          onReplaceQueryChange = {},
           onClearSearch = {},
           onToggleRegex = {},
-          onToggleMatchCase = {}
+          onToggleMatchCase = {},
+          onReplaceClick = {},
+          onCloseReplaceMode = {}
         )
       }
     }
