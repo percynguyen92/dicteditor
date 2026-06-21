@@ -1,43 +1,36 @@
-# DictEditor - Material 3 Android Dictionary Editor
+[English](README_EN.md)
 
-DictEditor is a modern, premium Android dictionary editor built with Jetpack Compose, Material 3, and MVVM architecture. It is designed to manage Chinese-Vietnamese dictionary entries with advanced editing capabilities, drag-and-drop meaning reordering, and integrated AI-assisted translation.
+# DictEditor - Trình chỉnh sửa từ điển Android giao diện Material 3
 
-## Features
+DictEditor là một ứng dụng chỉnh sửa từ điển Android hiện đại, cao cấp được xây dựng bằng Jetpack Compose, Material 3 và kiến trúc MVVM. Ứng dụng được thiết kế để quản lý các mục từ điển Trung-Việt với khả năng chỉnh sửa nâng cao, sắp xếp lại thứ tự nghĩa bằng cách kéo thả và tích hợp dịch thuật hỗ trợ bởi AI.
 
-- **Material 3 UI/UX**: Clean, responsive layout with glassmorphism design elements and top-positioned notifications.
-- **Word Meanings Management**: Support for in-place editing, addition, deletion, and drag-and-drop reordering of word meanings.
-- **Han-Viet Translation Lookup**: Automatic Sino-Vietnamese (Hán Việt) phonetic lookup and suggestion.
-- **AI Translate Portal (ATP) Integration**: Connect with external translation services via AIDL connection.
-- **Import & Export**: Easily batch import words and export your dictionary files.
-- **Undo & Redo**: Full support for rolling back and redoing edits to prevent data loss.
+## Tính năng
 
-## Tech Stack
+- **Giao diện Material 3 UI/UX**: Bố cục rõ ràng, mượt mà với các yếu tố thiết kế kính mờ (glassmorphism) và thông báo hiển thị ở phía trên màn hình.
+- **Quản lý nghĩa của từ**: Hỗ trợ chỉnh sửa trực tiếp, thêm mới, xóa và kéo thả để sắp xếp lại thứ tự của các nghĩa của từ.
+- **Tích hợp AI Translate Portal (ATP)**: Kết nối với các dịch vụ dịch thuật bên ngoài thông qua kết nối AIDL.
+- **Nhập & Xuất dữ liệu**: Dễ dàng nhập hàng loạt từ mới và xuất file từ điển của bạn.
+- **Hoàn tác & Làm lại (Undo & Redo)**: Hỗ trợ đầy đủ việc hoàn tác và làm lại các chỉnh sửa để tránh mất mát dữ liệu.
+
+## Công nghệ sử dụng
 
 - **Framework**: Android SDK (Kotlin), Jetpack Compose
 - **Design System**: Material Design 3
-- **Architecture**: MVVM (Model-View-ViewModel) with StateFlow
-- **Concurrency**: Kotlin Coroutines & Flow
+- **Kiến trúc**: MVVM (Model-View-ViewModel) với StateFlow
+- **Đồng thì (Concurrency)**: Kotlin Coroutines & Flow
 - **IPC**: AIDL (Android Interface Definition Language)
 
-## Getting Started
+## Bắt đầu sử dụng
 
-### Prerequisites
+### Yêu cầu hệ thống
 
-- Android Studio Koala or newer
+- Android Studio Koala hoặc mới hơn
 - Android SDK 34+
 - Java JDK 17
 
-### Building and Running
+### Hướng dẫn Build và Chạy thử
 
-1. Clone this repository.
-2. Open the project folder in Android Studio.
-3. Allow Gradle to sync and download the dependencies.
-4. Run the application on an Android Emulator or physical device (API level 26+ recommended).
-
-### Release and Publishing
-
-To publish the application to Google Play Store or distribute the APK:
-
-1. Create a release signing configuration in `app/build.gradle.kts`.
-2. Generate a signed bundle/APK via **Build > Generate Signed Bundle / APK** in Android Studio.
-3. Configure the proguard rules in `app/proguard-rules.pro` if code shrinking is enabled.
+1. Clone repository này về máy.
+2. Mở thư mục dự án bằng Android Studio.
+3. Chờ Gradle đồng bộ và tải các thư viện phụ thuộc.
+4. Chạy ứng dụng trên Emulator Android hoặc thiết bị vật lý (khuyến nghị API level 26 trở lên).
