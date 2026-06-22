@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.ui.components
+package com.dicteditor.percynguyen92.ui.screens.main.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -27,6 +27,7 @@ import com.dicteditor.percynguyen92.data.DictEntry
 
 import dev.chrisbanes.haze.HazeState
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
+import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 
 @Composable
 fun DictEntryItemRow(

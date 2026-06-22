@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.ui.components.dialogs
+package com.dicteditor.percynguyen92.ui.screens.main.components.dialogs
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
@@ -12,26 +12,26 @@ import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 import dev.chrisbanes.haze.HazeState
 
 @Composable
-fun CloseFileWarningDialog(
+fun ExitWarningDialog(
     hazeState: HazeState,
     onDismiss: () -> Unit,
-    onSaveAndClose: () -> Unit,
-    onDiscardAndClose: () -> Unit
+    onSaveAndExit: () -> Unit,
+    onDiscardAndExit: () -> Unit
 ) {
     HazeAlertDialog(
         hazeState = hazeState,
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_unsaved_changes_title), style = MaterialTheme.typography.titleLarge) },
-        text = { Text(stringResource(R.string.dialog_close_file_message), style = MaterialTheme.typography.bodySmall) },
+        text = { Text(stringResource(R.string.dialog_exit_message), style = MaterialTheme.typography.bodySmall) },
         confirmButton = {
-            Button(onClick = onSaveAndClose) {
-                Text(stringResource(R.string.dialog_save_and_close), style = MaterialTheme.typography.labelLarge)
+            Button(onClick = onSaveAndExit) {
+                Text(stringResource(R.string.dialog_save_and_exit), style = MaterialTheme.typography.labelLarge)
             }
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onDiscardAndClose) {
-                    Text(stringResource(R.string.dialog_discard), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
+                TextButton(onClick = onDiscardAndExit) {
+                    Text(stringResource(R.string.dialog_discard_changes), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
                 }
                 TextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.dialog_cancel), style = MaterialTheme.typography.labelLarge)

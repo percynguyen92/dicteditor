@@ -1,14 +1,22 @@
 package com.dicteditor.percynguyen92.viewmodel
 
 import android.content.Context
+import java.util.concurrent.atomic.AtomicInteger
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.data.DictEntry
+import com.dicteditor.percynguyen92.data.DictEntryPagingSource
 import com.dicteditor.percynguyen92.data.DictionaryRepository
 import com.dicteditor.percynguyen92.data.EntryOpResult
 import com.dicteditor.percynguyen92.data.RecentFilesManager
 import com.dicteditor.percynguyen92.data.SearchEngine
+import com.dicteditor.percynguyen92.utils.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -18,12 +26,14 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
-import androidx.annotation.MainThread
-import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DictionaryViewModel : ViewModel() {
 
     private val repository = DictionaryRepository(maxHistorySize = 10)
@@ -40,11 +50,8 @@ class DictionaryViewModel : ViewModel() {
     private val _searchMatchCase = MutableStateFlow(false)
     val searchMatchCase: StateFlow<Boolean> = _searchMatchCase.asStateFlow()
 
-    private val _currentPage = MutableStateFlow(0)
-    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
-
-    private val _statusMessage = MutableStateFlow("")
-    val statusMessage: StateFlow<String> = _statusMessage.asStateFlow()
+    private val _statusMessage = MutableStateFlow<UiText?>(null)
+    val statusMessage: StateFlow<UiText?> = _statusMessage.asStateFlow()
 
     private val _uiEvents = MutableSharedFlow<UiSnackbarEvent>()
     val uiEvents: SharedFlow<UiSnackbarEvent> = _uiEvents.asSharedFlow()
@@ -78,19 +85,25 @@ class DictionaryViewModel : ViewModel() {
     private val _filteredEntriesCount = MutableStateFlow(0)
     val filteredEntriesCount: StateFlow<Int> = _filteredEntriesCount.asStateFlow()
 
-    private val _totalPages = MutableStateFlow(0)
-    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
-
     private val _totalWords = MutableStateFlow(0)
     val totalWords: StateFlow<Int> = _totalWords.asStateFlow()
 
-    // Paginated list shown on UI
-    private val _displayEntries = MutableStateFlow<List<DictEntry>>(emptyList())
-    val displayEntries: StateFlow<List<DictEntry>> = _displayEntries.asStateFlow()
+    private val _filteredEntriesFlow = MutableStateFlow<List<DictEntry>>(emptyList())
+    val entryPagingFlow: Flow<PagingData<DictEntry>> = _filteredEntriesFlow
+        .flatMapLatest { entries ->
+            Pager(
+                config = PagingConfig(
+                    pageSize = 200,
+                    enablePlaceholders = false,
+                    initialLoadSize = 200
+                ),
+                pagingSourceFactory = { DictEntryPagingSource(entries) }
+            ).flow
+        }
+        .cachedIn(viewModelScope)
 
-    val pageSize = 200
     private var searchJob: Job? = null
-    private var activeOperationsCount = 0
+    private val activeOperationsCount = AtomicInteger(0)
 
     init {
         // Collect repository entries and update filtered list reactively
@@ -102,14 +115,15 @@ class DictionaryViewModel : ViewModel() {
     }
 
     private fun incrementLoading() {
-        activeOperationsCount++
-        _isLoading.value = true
+        if (activeOperationsCount.incrementAndGet() == 1) {
+            _isLoading.value = true
+        }
     }
 
     private fun decrementLoading() {
-        activeOperationsCount--
-        if (activeOperationsCount <= 0) {
-            activeOperationsCount = 0
+        val remaining = activeOperationsCount.decrementAndGet()
+        if (remaining <= 0) {
+            activeOperationsCount.set(0)
             _isLoading.value = false
         }
     }
@@ -138,24 +152,11 @@ class DictionaryViewModel : ViewModel() {
         _recentFiles.value = RecentFilesManager.removeRecentFile(context, uri)
     }
 
-    private fun updateDisplay() {
-        val filtered = filteredEntries
-        val page = _currentPage.value
-        val start = page * pageSize
-        val end = minOf(start + pageSize, filtered.size)
-
-        if (start < filtered.size && start >= 0) {
-            _displayEntries.value = filtered.subList(start, end).toList()
-        } else {
-            _displayEntries.value = emptyList()
-        }
-    }
-
     private fun setFilteredList(list: List<DictEntry>, totalSize: Int) {
         filteredEntries = list
         _filteredEntriesCount.value = list.size
-        _totalPages.value = if (list.isEmpty()) 0 else (list.size + pageSize - 1) / pageSize
         _totalWords.value = totalSize
+        _filteredEntriesFlow.value = list
     }
 
     private suspend fun applyFilter(entries: List<DictEntry>, maintainPage: Boolean) {
@@ -171,26 +172,11 @@ class DictionaryViewModel : ViewModel() {
             val filtered = result.getOrElse { exception ->
                 _searchError.value = exception.message
                 setFilteredList(emptyList(), entries.size)
-                if (!maintainPage) {
-                    _currentPage.value = 0
-                }
-                updateDisplay()
                 return@withContext
             }
             
             _searchError.value = null
             setFilteredList(filtered, entries.size)
-            if (!maintainPage) {
-                _currentPage.value = 0
-            } else {
-                val pages = _totalPages.value
-                if (_currentPage.value >= pages && pages > 0) {
-                    _currentPage.value = pages - 1
-                } else if (_currentPage.value < 0) {
-                    _currentPage.value = 0
-                }
-            }
-            updateDisplay()
         }
     }
 
@@ -200,8 +186,7 @@ class DictionaryViewModel : ViewModel() {
             try {
                 repository.closeFile()
                 _searchQuery.value = ""
-                _currentPage.value = 0
-                _statusMessage.value = "Đã đóng file"
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_closed)
             } finally {
                 decrementLoading()
             }
@@ -211,20 +196,20 @@ class DictionaryViewModel : ViewModel() {
     fun loadFile(context: Context, uri: Uri) {
         viewModelScope.launch {
             incrementLoading()
-            _statusMessage.value = "Đang tải dữ liệu từ file..."
+            _statusMessage.value = UiText.StringResource(R.string.vm_status_loading)
             try {
                 val result = repository.loadFile(context, uri)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
                     addRecentFile(context, uri)
-                    _statusMessage.value = "Đã tải $count từ"
-                    _uiEvents.emit(UiSnackbarEvent("Đã tải thành công $count từ", SnackbarType.SUCCESS))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_loaded, listOf(count))
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_loaded, listOf(count)), SnackbarType.SUCCESS))
                 } else {
                     val exception = result.exceptionOrNull()
-                        _statusMessage.value = "Lỗi khi tải file"
-                        val errorMsg = exception?.message ?: "Lỗi không xác định"
-                        _fileLoadError.value = Pair(uri, errorMsg)
-                        removeRecentFile(context, uri)
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_load_error)
+                    val errorMsg = exception?.message ?: context.getString(R.string.vm_error_unknown)
+                    _fileLoadError.value = Pair(uri, errorMsg)
+                    removeRecentFile(context, uri)
                 }
             } finally {
                 decrementLoading()
@@ -235,17 +220,17 @@ class DictionaryViewModel : ViewModel() {
     fun saveFile(context: Context) {
         viewModelScope.launch {
             incrementLoading()
-            _statusMessage.value = "Đang lưu dữ liệu về file..."
+            _statusMessage.value = UiText.StringResource(R.string.vm_status_saving)
             try {
                 val result = repository.saveFile(context)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
-                    _statusMessage.value = "Đã lưu $count từ"
-                    _uiEvents.emit(UiSnackbarEvent("Đã lưu thành công $count từ", SnackbarType.SUCCESS))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_saved, listOf(count))
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_saved, listOf(count)), SnackbarType.SUCCESS))
                 } else {
                     val exception = result.exceptionOrNull()
-                    _statusMessage.value = "Lỗi khi lưu file"
-                    _uiEvents.emit(UiSnackbarEvent("Không có quyền ghi file hoặc lỗi: ${exception?.message}", SnackbarType.ERROR))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_save_error)
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_save_error, listOf(exception?.message ?: "")), SnackbarType.ERROR))
                 }
             } finally {
                 decrementLoading()
@@ -271,7 +256,7 @@ class DictionaryViewModel : ViewModel() {
             incrementLoading()
             try {
                 applyFilter(repository.entriesFlow.value, maintainPage = false)
-                _statusMessage.value = "Tìm thấy ${filteredEntries.size} từ"
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_found, listOf(filteredEntries.size))
             } finally {
                 decrementLoading()
             }
@@ -284,7 +269,7 @@ class DictionaryViewModel : ViewModel() {
             try {
                 val ok = repository.undo()
                 if (ok) {
-                    _uiEvents.emit(UiSnackbarEvent("Đã hoàn tác (Undo)", SnackbarType.INFO))
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_undo), SnackbarType.INFO))
                 }
             } finally {
                 decrementLoading()
@@ -298,7 +283,7 @@ class DictionaryViewModel : ViewModel() {
             try {
                 val ok = repository.redo()
                 if (ok) {
-                    _uiEvents.emit(UiSnackbarEvent("Đã làm lại (Redo)", SnackbarType.INFO))
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_redo), SnackbarType.INFO))
                 }
             } finally {
                 decrementLoading()
@@ -314,7 +299,7 @@ class DictionaryViewModel : ViewModel() {
                 EntryOpResult.Success -> return true
                 EntryOpResult.Merged -> return false
                 EntryOpResult.Duplicate -> {
-                    _uiEvents.emit(UiSnackbarEvent("Từ '$chinese' đã tồn tại trong từ điển, bỏ qua!", SnackbarType.ERROR))
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_duplicate, listOf(chinese)), SnackbarType.ERROR))
                     return false
                 }
                 EntryOpResult.Invalid -> return false
@@ -350,7 +335,7 @@ class DictionaryViewModel : ViewModel() {
             incrementLoading()
             try {
                 repository.deleteEntries(ids)
-                _uiEvents.emit(UiSnackbarEvent("Đã xóa hàng loạt ${ids.size} từ", SnackbarType.SUCCESS))
+                _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_deleted, listOf(ids.size)), SnackbarType.SUCCESS))
             } finally {
                 decrementLoading()
             }
@@ -360,11 +345,10 @@ class DictionaryViewModel : ViewModel() {
     fun sortByDefaultLengthDescending() {
         viewModelScope.launch {
             incrementLoading()
-            _statusMessage.value = "Đang sắp xếp từ điển..."
+            _statusMessage.value = UiText.StringResource(R.string.vm_status_sorting)
             try {
                 repository.sortByDefaultLengthDescending()
-                _uiEvents.emit(UiSnackbarEvent("Đã sắp xếp từ dài tới ngắn (mặc định)", SnackbarType.INFO))
-                _statusMessage.value = "Đã sắp xếp dài -> ngắn"
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_sorted_desc)
             } finally {
                 decrementLoading()
             }
@@ -374,11 +358,10 @@ class DictionaryViewModel : ViewModel() {
     fun sortByLengthAscending() {
         viewModelScope.launch {
             incrementLoading()
-            _statusMessage.value = "Đang sắp xếp từ điển..."
+            _statusMessage.value = UiText.StringResource(R.string.vm_status_sorting)
             try {
                 repository.sortByLengthAscending()
-                _uiEvents.emit(UiSnackbarEvent("Đã sắp xếp từ ngắn tới dài", SnackbarType.INFO))
-                _statusMessage.value = "Đã sắp xếp ngắn -> dài"
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_sorted_asc)
             } finally {
                 decrementLoading()
             }
@@ -395,17 +378,17 @@ class DictionaryViewModel : ViewModel() {
         if (findText.isEmpty()) return
         viewModelScope.launch {
             incrementLoading()
-            _statusMessage.value = "Đang tìm và thay thế..."
+            _statusMessage.value = UiText.StringResource(R.string.vm_status_replacing)
             try {
                 val result = repository.findAndReplace(findText, replaceText, useRegex, matchCase, scopeIds)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
-                    _uiEvents.emit(UiSnackbarEvent("Đã thay thế $count lần", SnackbarType.SUCCESS))
-                    _statusMessage.value = "Thay thế: $count lần"
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_replaced, listOf(count)), SnackbarType.SUCCESS))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_replaced, listOf(count))
                 } else {
                     val exception = result.exceptionOrNull()
-                    _uiEvents.emit(UiSnackbarEvent("Lỗi Regex: ${exception?.message}", SnackbarType.ERROR))
-                    _statusMessage.value = "Lỗi Regex"
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_regex_error, listOf(exception?.message ?: "")), SnackbarType.ERROR))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_regex_error)
                 }
             } finally {
                 decrementLoading()
@@ -417,14 +400,14 @@ class DictionaryViewModel : ViewModel() {
         if (rawText.isBlank()) return
         viewModelScope.launch {
             incrementLoading()
-            _statusMessage.value = "Đang import hàng loạt..."
+            _statusMessage.value = UiText.StringResource(R.string.vm_status_importing)
             try {
                 val importResult = repository.batchImport(rawText)
-                _uiEvents.emit(UiSnackbarEvent("Đã import ${importResult.importedNewCount} từ mới, gộp ${importResult.mergedCount} từ trùng và bỏ qua ${importResult.invalidSkipCount} dòng lỗi", SnackbarType.SUCCESS))
-                _statusMessage.value = "Đã import ${importResult.importedNewCount} từ, gộp ${importResult.mergedCount}"
+                _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_imported, listOf(importResult.importedNewCount, importResult.mergedCount, importResult.invalidSkipCount)), SnackbarType.SUCCESS))
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_imported, listOf(importResult.importedNewCount, importResult.mergedCount))
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiEvents.emit(UiSnackbarEvent("Lỗi khi batch import: ${e.message}", SnackbarType.ERROR))
+                _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_import_error, listOf(e.message ?: "")), SnackbarType.ERROR))
             } finally {
                 decrementLoading()
             }
@@ -441,46 +424,6 @@ class DictionaryViewModel : ViewModel() {
         repository.resetUnsavedChanges()
     }
 
-    fun nextPage() {
-        val pages = totalPages.value
-        if (_currentPage.value < pages - 1) {
-            _currentPage.value++
-            updateDisplay()
-        }
-    }
-
-    fun prevPage() {
-        if (_currentPage.value > 0) {
-            _currentPage.value--
-            updateDisplay()
-        }
-    }
-
-    fun firstPage() {
-        if (_currentPage.value != 0) {
-            _currentPage.value = 0
-            updateDisplay()
-        }
-    }
-
-    fun lastPage() {
-        val pages = totalPages.value
-        if (pages > 0 && _currentPage.value != pages - 1) {
-            _currentPage.value = pages - 1
-            updateDisplay()
-        }
-    }
-
-    fun jumpToPage(pageIndex: Int) {
-        val pages = totalPages.value
-        if (pages > 0) {
-            val target = pageIndex.coerceIn(0, pages - 1)
-            if (_currentPage.value != target) {
-                _currentPage.value = target
-                updateDisplay()
-            }
-        }
-    }
 }
 
 enum class SnackbarType {
@@ -488,7 +431,6 @@ enum class SnackbarType {
 }
 
 data class UiSnackbarEvent(
-    val message: String,
+    val message: UiText,
     val type: SnackbarType = SnackbarType.INFO
 )
-

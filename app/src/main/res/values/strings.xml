@@ -6,6 +6,9 @@
     <string name="label_chinese_word">Từ tiếng Trung</string>
     <string name="label_meanings">Nghĩa</string>
     <string name="label_add_meaning">Thêm nghĩa mới</string>
+    <string name="label_han_viet">Hán Việt</string>
+    <string name="snackbar_deleted_meaning">Đã xóa nghĩa: \"%1$s\"</string>
+    <string name="button_undo">Hoàn tác</string>
     <string name="description_remove">Xoá bỏ</string>
     <string name="description_edit_meaning">Chỉnh sửa</string>
     <string name="description_drag_to_reorder">Kéo thả để sắp xếp</string>
@@ -135,4 +138,35 @@
     <!-- ATP Connection Status -->
     <string name="label_atp_online">ATP online</string>
     <string name="label_atp_offline">ATP offline</string>
+
+    <!-- ViewModel Strings -->
+    <string name="vm_status_closed">Đã đóng file</string>
+    <string name="vm_status_loading">Đang tải dữ liệu từ file&#8230;</string>
+    <string name="vm_status_loaded">Đã tải %1$d từ</string>
+    <string name="vm_snackbar_loaded">Đã tải thành công %1$d từ</string>
+    <string name="vm_status_load_error">Lỗi khi tải file</string>
+    <string name="vm_error_unknown">Lỗi không xác định</string>
+    <string name="vm_status_saving">Đang lưu dữ liệu về file&#8230;</string>
+    <string name="vm_status_saved">Đã lưu %1$d từ</string>
+    <string name="vm_snackbar_saved">Đã lưu thành công %1$d từ</string>
+    <string name="vm_status_save_error">Lỗi khi lưu file</string>
+    <string name="vm_snackbar_save_error">Không có quyền ghi file hoặc lỗi: %1$s</string>
+    <string name="vm_status_found">Tìm thấy %1$d từ</string>
+    <string name="vm_snackbar_undo">Đã hoàn tác</string>
+    <string name="vm_snackbar_redo">Đã làm lại</string>
+    <string name="vm_snackbar_duplicate">Từ \'%1$s\' đã tồn tại trong từ điển, bỏ qua!</string>
+    <string name="vm_snackbar_deleted">Đã xóa %1$d từ</string>
+    <string name="vm_status_sorting">Đang sắp xếp từ điển&#8230;</string>
+    <string name="vm_status_sorted_desc">Đã sắp xếp dài -> ngắn</string>
+    <string name="vm_status_sorted_asc">Đã sắp xếp ngắn -> dài</string>
+    <string name="vm_status_replacing">Đang tìm và thay thế&#8230;</string>
+    <string name="vm_snackbar_replaced">Đã thay thế %1$d lần</string>
+    <string name="vm_status_replaced">Thay thế: %1$d lần</string>
+    <string name="vm_snackbar_regex_error">Lỗi Regex: %1$s</string>
+    <string name="vm_status_regex_error">Lỗi Regex</string>
+    <string name="vm_status_importing">Đang import hàng loạt&#8230;</string>
+    <string name="vm_snackbar_imported">Đã import %1$d từ mới, gộp %2$d từ trùng và bỏ qua %3$d dòng lỗi</string>
+    <string name="vm_status_imported">Đã import %1$d từ, gộp %2$d</string>
+    <string name="vm_snackbar_import_error">Lỗi khi batch import: %1$s</string>
 </resources>
+

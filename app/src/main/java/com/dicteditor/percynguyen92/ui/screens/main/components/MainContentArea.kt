@@ -1,9 +1,11 @@
-package com.dicteditor.percynguyen92.ui.components
+package com.dicteditor.percynguyen92.ui.screens.main.components
 
+import com.dicteditor.percynguyen92.ui.components.appBackground
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemKey
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
@@ -24,7 +26,7 @@ fun MainContentArea(
     hazeState: HazeState,
     openedFileUri: Uri?,
     isLoading: Boolean,
-    displayEntries: List<DictEntry>,
+    displayEntries: LazyPagingItems<DictEntry>,
     recentFiles: List<Uri>,
     fileLoadError: Pair<Uri, String>?,
     onClearError: () -> Unit,
@@ -57,7 +59,7 @@ fun MainContentArea(
                     onOpenNewClick = onOpenNewClick
                 )
             }
-        } else if (displayEntries.isEmpty() && !isLoading) {
+        } else if (displayEntries.itemCount == 0 && !isLoading) {
             Box(modifier = Modifier.padding(contentPadding)) {
                 if (searchError != null) {
                     EmptyStateView(
@@ -97,19 +99,25 @@ fun MainContentArea(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(displayEntries, key = { it.id }) { entry ->
-                    DictEntryItemRow(
-                        hazeState = hazeState,
-                        entry = entry,
-                        onEditClick = { onEditClick(entry) },
-                        onDeleteConfirm = { onDeleteConfirm(entry.id) },
-                        selected = selectedIds[entry.id] == true,
-                        onSelectedChange = { isChecked ->
-                            onSelectedChange(entry.id, isChecked)
-                        },
-                        isHighlighted = highlightedIds.contains(entry.id),
-                        isBulkMode = isBulkMode
-                    )
+                items(
+                    count = displayEntries.itemCount,
+                    key = displayEntries.itemKey { it.id }
+                ) { index ->
+                    val entry = displayEntries[index]
+                    if (entry != null) {
+                        DictEntryItemRow(
+                            hazeState = hazeState,
+                            entry = entry,
+                            onEditClick = { onEditClick(entry) },
+                            onDeleteConfirm = { onDeleteConfirm(entry.id) },
+                            selected = selectedIds[entry.id] == true,
+                            onSelectedChange = { isChecked ->
+                                onSelectedChange(entry.id, isChecked)
+                            },
+                            isHighlighted = highlightedIds.contains(entry.id),
+                            isBulkMode = isBulkMode
+                        )
+                    }
                 }
             }
         }

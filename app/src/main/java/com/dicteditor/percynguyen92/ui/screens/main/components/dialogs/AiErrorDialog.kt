@@ -1,6 +1,6 @@
 @file:Suppress("PackageName")
 
-package com.dicteditor.percynguyen92.ui.components.dialogs
+package com.dicteditor.percynguyen92.ui.screens.main.components.dialogs
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme

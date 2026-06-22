@@ -1,5 +1,6 @@
-package com.dicteditor.percynguyen92.ui.components
+package com.dicteditor.percynguyen92.ui.screens.main.components
 
+import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
 import android.annotation.SuppressLint
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState

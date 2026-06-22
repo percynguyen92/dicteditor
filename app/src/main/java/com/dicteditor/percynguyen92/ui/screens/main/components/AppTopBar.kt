@@ -1,5 +1,6 @@
-package com.dicteditor.percynguyen92.ui.components
+package com.dicteditor.percynguyen92.ui.screens.main.components
 
+import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

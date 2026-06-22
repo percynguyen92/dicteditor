@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.ui.components
+package com.dicteditor.percynguyen92.ui.screens.main.components
 
 import android.content.Context
 import android.net.Uri
@@ -23,6 +23,7 @@ import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.utils.getFileName
 import dev.chrisbanes.haze.HazeState
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
+import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
 import androidx.compose.ui.graphics.Color
 
 @Composable

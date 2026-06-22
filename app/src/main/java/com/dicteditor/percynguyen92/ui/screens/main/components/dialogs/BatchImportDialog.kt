@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.ui.components.dialogs
+package com.dicteditor.percynguyen92.ui.screens.main.components.dialogs
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
