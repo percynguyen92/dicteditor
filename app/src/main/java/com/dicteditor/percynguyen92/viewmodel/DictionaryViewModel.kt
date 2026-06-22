@@ -44,14 +44,19 @@ class DictionaryViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    private val searchCoordinator = SearchCoordinator(
+        scope = viewModelScope,
+        entriesSource = repository.entriesFlow,
+        onLoadingChange = { loading ->
+            if (loading) incrementLoading() else decrementLoading()
+        }
+    )
 
-    private val _searchUseRegex = MutableStateFlow(false)
-    val searchUseRegex: StateFlow<Boolean> = _searchUseRegex.asStateFlow()
-
-    private val _searchMatchCase = MutableStateFlow(false)
-    val searchMatchCase: StateFlow<Boolean> = _searchMatchCase.asStateFlow()
+    val searchQuery: StateFlow<String> = searchCoordinator.query
+    val searchUseRegex: StateFlow<Boolean> = searchCoordinator.useRegex
+    val searchMatchCase: StateFlow<Boolean> = searchCoordinator.matchCase
+    val searchError: StateFlow<String?> = searchCoordinator.error
+    val filteredEntriesCount: StateFlow<Int> = searchCoordinator.filteredCount
 
     private val _statusMessage = MutableStateFlow<UiText?>(null)
     val statusMessage: StateFlow<UiText?> = _statusMessage.asStateFlow()
@@ -69,9 +74,6 @@ class DictionaryViewModel : ViewModel() {
         _fileLoadError.value = null
     }
 
-    private val _searchError = MutableStateFlow<String?>(null)
-    val searchError: StateFlow<String?> = _searchError.asStateFlow()
-
     // Expose flows directly from repository
     val openedFileUri: StateFlow<Uri?> = repository.openedFileUri
     val hasUnsavedChanges: StateFlow<Boolean> = repository.hasUnsavedChanges
@@ -79,10 +81,7 @@ class DictionaryViewModel : ViewModel() {
     val canRedo: StateFlow<Boolean> = repository.canRedo
     val highlightedIds: StateFlow<Set<String>> = repository.highlightedIds
 
-    // Filtered list based on search query
-    private val _filteredEntries = MutableStateFlow<List<DictEntry>>(emptyList())
-
-    val filteredEntriesIds: StateFlow<Set<String>> = _filteredEntries
+    val filteredEntriesIds: StateFlow<Set<String>> = searchCoordinator.filtered
         .map { list -> list.map { it.id }.toSet() }
         .stateIn(
             scope = viewModelScope,
@@ -90,14 +89,15 @@ class DictionaryViewModel : ViewModel() {
             initialValue = emptySet()
         )
 
-    private val _filteredEntriesCount = MutableStateFlow(0)
-    val filteredEntriesCount: StateFlow<Int> = _filteredEntriesCount.asStateFlow()
+    val totalWords: StateFlow<Int> = repository.entriesFlow
+        .map { it.size }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 0
+        )
 
-    private val _totalWords = MutableStateFlow(0)
-    val totalWords: StateFlow<Int> = _totalWords.asStateFlow()
-
-    private val _filteredEntriesFlow = MutableStateFlow<List<DictEntry>>(emptyList())
-    val entryPagingFlow: Flow<PagingData<DictEntry>> = _filteredEntriesFlow
+    val entryPagingFlow: Flow<PagingData<DictEntry>> = searchCoordinator.filtered
         .flatMapLatest { entries ->
             Pager(
                 config = PagingConfig(
@@ -110,14 +110,22 @@ class DictionaryViewModel : ViewModel() {
         }
         .cachedIn(viewModelScope)
 
-    private var searchJob: Job? = null
     private val activeOperationsCount = AtomicInteger(0)
 
     init {
         // Collect repository entries and update filtered list reactively
         viewModelScope.launch {
             repository.entriesFlow.collect { entries ->
-                applyFilter(entries, maintainPage = true)
+                searchCoordinator.onEntriesChanged(entries)
+            }
+        }
+
+        // Update status message when search results change
+        viewModelScope.launch {
+            searchCoordinator.filteredCount.collect { count ->
+                if (searchCoordinator.query.value.isNotEmpty()) {
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_found, listOf(count))
+                }
             }
         }
     }
@@ -160,40 +168,12 @@ class DictionaryViewModel : ViewModel() {
         _recentFiles.value = RecentFilesManager.removeRecentFile(context, uri)
     }
 
-    private fun setFilteredList(list: List<DictEntry>, totalSize: Int) {
-        _filteredEntries.value = list
-        _filteredEntriesCount.value = list.size
-        _totalWords.value = totalSize
-        _filteredEntriesFlow.value = list
-    }
-
-    private suspend fun applyFilter(entries: List<DictEntry>, maintainPage: Boolean) {
-        val query = _searchQuery.value
-        val isRegex = _searchUseRegex.value
-        val matchCase = _searchMatchCase.value
-        
-        val result = withContext(Dispatchers.Default) {
-            SearchEngine.filterEntries(query, entries, isRegex, matchCase)
-        }
-        
-        withContext(Dispatchers.Main) {
-            val filtered = result.getOrElse { exception ->
-                _searchError.value = exception.message
-                setFilteredList(emptyList(), entries.size)
-                return@withContext
-            }
-            
-            _searchError.value = null
-            setFilteredList(filtered, entries.size)
-        }
-    }
-
     fun closeFile() {
         viewModelScope.launch {
             incrementLoading()
             try {
                 repository.closeFile()
-                _searchQuery.value = ""
+                setSearchQuery("")
                 _statusMessage.value = UiText.StringResource(R.string.vm_status_closed)
             } finally {
                 decrementLoading()
@@ -247,28 +227,15 @@ class DictionaryViewModel : ViewModel() {
     }
 
     fun setSearchUseRegex(useRegex: Boolean) {
-        _searchUseRegex.value = useRegex
-        setSearchQuery(_searchQuery.value)
+        searchCoordinator.setUseRegex(useRegex)
     }
 
     fun setSearchMatchCase(matchCase: Boolean) {
-        _searchMatchCase.value = matchCase
-        setSearchQuery(_searchQuery.value)
+        searchCoordinator.setMatchCase(matchCase)
     }
 
     fun setSearchQuery(query: String) {
-        _searchQuery.value = query
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            delay(300)
-            incrementLoading()
-            try {
-                applyFilter(repository.entriesFlow.value, maintainPage = false)
-                _statusMessage.value = UiText.StringResource(R.string.vm_status_found, listOf(_filteredEntries.value.size))
-            } finally {
-                decrementLoading()
-            }
-        }
+        searchCoordinator.setQuery(query)
     }
 
     fun undo() {
