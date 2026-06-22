@@ -41,14 +41,14 @@ class DictionaryViewModel : ViewModel() {
 
     private val repository = DictionaryRepository(maxHistorySize = 10)
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val loadingManager = LoadingStateManager()
+    val isLoading: StateFlow<Boolean> = loadingManager.isLoading
 
     private val searchCoordinator = SearchCoordinator(
         scope = viewModelScope,
         entriesSource = repository.entriesFlow,
         onLoadingChange = { loading ->
-            if (loading) incrementLoading() else decrementLoading()
+            if (loading) loadingManager.increment() else loadingManager.decrement()
         }
     )
 
@@ -110,7 +110,6 @@ class DictionaryViewModel : ViewModel() {
         }
         .cachedIn(viewModelScope)
 
-    private val activeOperationsCount = AtomicInteger(0)
 
     init {
         // Collect repository entries and update filtered list reactively
@@ -130,19 +129,7 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 
-    private fun incrementLoading() {
-        if (activeOperationsCount.incrementAndGet() == 1) {
-            _isLoading.value = true
-        }
-    }
 
-    private fun decrementLoading() {
-        val remaining = activeOperationsCount.decrementAndGet()
-        if (remaining <= 0) {
-            activeOperationsCount.set(0)
-            _isLoading.value = false
-        }
-    }
 
     fun loadRecentFiles(context: Context) {
         val recents = RecentFilesManager.getRecentFiles(context)
@@ -170,22 +157,18 @@ class DictionaryViewModel : ViewModel() {
 
     fun closeFile() {
         viewModelScope.launch {
-            incrementLoading()
-            try {
+            loadingManager.tracked {
                 repository.closeFile()
                 setSearchQuery("")
                 _statusMessage.value = UiText.StringResource(R.string.vm_status_closed)
-            } finally {
-                decrementLoading()
             }
         }
     }
 
     fun loadFile(context: Context, uri: Uri) {
         viewModelScope.launch {
-            incrementLoading()
-            _statusMessage.value = UiText.StringResource(R.string.vm_status_loading)
-            try {
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_loading)
                 val result = repository.loadFile(context, uri)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
@@ -199,17 +182,14 @@ class DictionaryViewModel : ViewModel() {
                     _fileLoadError.value = Pair(uri, errorMsg)
                     removeRecentFile(context, uri)
                 }
-            } finally {
-                decrementLoading()
             }
         }
     }
 
     fun saveFile(context: Context) {
         viewModelScope.launch {
-            incrementLoading()
-            _statusMessage.value = UiText.StringResource(R.string.vm_status_saving)
-            try {
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_saving)
                 val result = repository.saveFile(context)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
@@ -220,8 +200,6 @@ class DictionaryViewModel : ViewModel() {
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_save_error)
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_save_error, listOf(exception?.message ?: "")), SnackbarType.ERROR))
                 }
-            } finally {
-                decrementLoading()
             }
         }
     }
@@ -240,66 +218,51 @@ class DictionaryViewModel : ViewModel() {
 
     fun undo() {
         viewModelScope.launch {
-            incrementLoading()
-            try {
+            loadingManager.tracked {
                 val ok = repository.undo()
                 if (ok) {
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_undo), SnackbarType.INFO))
                 }
-            } finally {
-                decrementLoading()
             }
         }
     }
 
     fun redo() {
         viewModelScope.launch {
-            incrementLoading()
-            try {
+            loadingManager.tracked {
                 val ok = repository.redo()
                 if (ok) {
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_redo), SnackbarType.INFO))
                 }
-            } finally {
-                decrementLoading()
             }
         }
     }
 
     suspend fun addEntry(chinese: String, meanings: List<String>): Boolean {
-        incrementLoading()
-        try {
+        return loadingManager.tracked {
             val result = repository.addEntry(chinese, meanings)
             when (result) {
-                EntryOpResult.Success -> return true
-                EntryOpResult.Merged -> return false
+                EntryOpResult.Success -> true
+                EntryOpResult.Merged -> false
                 EntryOpResult.Duplicate -> {
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_duplicate, listOf(chinese)), SnackbarType.ERROR))
-                    return false
+                    false
                 }
-                EntryOpResult.Invalid -> return false
+                EntryOpResult.Invalid -> false
             }
-        } finally {
-            decrementLoading()
         }
     }
 
     suspend fun updateEntry(id: String, chinese: String, meanings: List<String>): EntryOpResult {
-        incrementLoading()
-        try {
-            return repository.updateEntry(id, chinese, meanings)
-        } finally {
-            decrementLoading()
+        return loadingManager.tracked {
+            repository.updateEntry(id, chinese, meanings)
         }
     }
 
     fun deleteEntry(id: String) {
         viewModelScope.launch {
-            incrementLoading()
-            try {
+            loadingManager.tracked {
                 repository.deleteEntry(id)
-            } finally {
-                decrementLoading()
             }
         }
     }
@@ -307,38 +270,29 @@ class DictionaryViewModel : ViewModel() {
     fun deleteEntries(ids: Set<String>) {
         if (ids.isEmpty()) return
         viewModelScope.launch {
-            incrementLoading()
-            try {
+            loadingManager.tracked {
                 repository.deleteEntries(ids)
                 _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_deleted, listOf(ids.size)), SnackbarType.SUCCESS))
-            } finally {
-                decrementLoading()
             }
         }
     }
 
     fun sortByDefaultLengthDescending() {
         viewModelScope.launch {
-            incrementLoading()
-            _statusMessage.value = UiText.StringResource(R.string.vm_status_sorting)
-            try {
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_sorting)
                 repository.sortByDefaultLengthDescending()
                 _statusMessage.value = UiText.StringResource(R.string.vm_status_sorted_desc)
-            } finally {
-                decrementLoading()
             }
         }
     }
 
     fun sortByLengthAscending() {
         viewModelScope.launch {
-            incrementLoading()
-            _statusMessage.value = UiText.StringResource(R.string.vm_status_sorting)
-            try {
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_sorting)
                 repository.sortByLengthAscending()
                 _statusMessage.value = UiText.StringResource(R.string.vm_status_sorted_asc)
-            } finally {
-                decrementLoading()
             }
         }
     }
@@ -352,9 +306,8 @@ class DictionaryViewModel : ViewModel() {
     ) {
         if (findText.isEmpty()) return
         viewModelScope.launch {
-            incrementLoading()
-            _statusMessage.value = UiText.StringResource(R.string.vm_status_replacing)
-            try {
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_replacing)
                 val result = repository.findAndReplace(findText, replaceText, useRegex, matchCase, scopeIds)
                 if (result.isSuccess) {
                     val count = result.getOrThrow()
@@ -365,8 +318,6 @@ class DictionaryViewModel : ViewModel() {
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_regex_error, listOf(exception?.message ?: "")), SnackbarType.ERROR))
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_regex_error)
                 }
-            } finally {
-                decrementLoading()
             }
         }
     }
@@ -374,17 +325,16 @@ class DictionaryViewModel : ViewModel() {
     fun batchImport(rawText: String) {
         if (rawText.isBlank()) return
         viewModelScope.launch {
-            incrementLoading()
-            _statusMessage.value = UiText.StringResource(R.string.vm_status_importing)
-            try {
-                val importResult = repository.batchImport(rawText)
-                _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_imported, listOf(importResult.importedNewCount, importResult.mergedCount, importResult.invalidSkipCount)), SnackbarType.SUCCESS))
-                _statusMessage.value = UiText.StringResource(R.string.vm_status_imported, listOf(importResult.importedNewCount, importResult.mergedCount))
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_import_error, listOf(e.message ?: "")), SnackbarType.ERROR))
-            } finally {
-                decrementLoading()
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_importing)
+                try {
+                    val importResult = repository.batchImport(rawText)
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_imported, listOf(importResult.importedNewCount, importResult.mergedCount, importResult.invalidSkipCount)), SnackbarType.SUCCESS))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_imported, listOf(importResult.importedNewCount, importResult.mergedCount))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_import_error, listOf(e.message ?: "")), SnackbarType.ERROR))
+                }
             }
         }
     }
