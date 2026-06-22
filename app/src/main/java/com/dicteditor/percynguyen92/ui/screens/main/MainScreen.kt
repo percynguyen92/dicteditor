@@ -262,7 +262,7 @@ fun MainScreen(
                 },
                 onReplaceClick = {
                     if (searchQuery.isNotEmpty()) {
-                        val scopeIds = viewModel.filteredEntriesIds
+                        val scopeIds = viewModel.filteredEntriesIds.value
                         viewModel.findAndReplace(
                             findText = searchQuery,
                             replaceText = replaceQuery,
@@ -285,7 +285,7 @@ fun MainScreen(
                     hazeState = hazeState,
                     selectedCount = selectedCount,
                     onSelectAll = {
-                        viewModel.filteredEntriesIds.forEach { id ->
+                        viewModel.filteredEntriesIds.value.forEach { id ->
                             selectedIds[id] = true
                         }
                     },
@@ -293,10 +293,12 @@ fun MainScreen(
                     onBulkDeleteClick = { showBulkDeleteConfirmDialog = true },
                     onBulkExportClick = { 
                         val selected = selectedIds.filterValues { it }.keys.toSet()
-                        val exportStr = viewModel.getExportStringForSelected(selected)
-                        ExportSession.exportText = exportStr
-                        context.startActivity(Intent(context, ExportActivity::class.java))
-                        selectedIds.clear()
+                        coroutineScope.launch {
+                            val exportStr = viewModel.getExportStringForSelected(selected)
+                            ExportSession.exportText = exportStr
+                            context.startActivity(Intent(context, ExportActivity::class.java))
+                            selectedIds.clear()
+                        }
                     },
                     onFabClick = {
                         editEntryTarget = null

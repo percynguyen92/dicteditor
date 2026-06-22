@@ -28,6 +28,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
@@ -77,10 +80,15 @@ class DictionaryViewModel : ViewModel() {
     val highlightedIds: StateFlow<Set<String>> = repository.highlightedIds
 
     // Filtered list based on search query
-    private var filteredEntries: List<DictEntry> = emptyList()
+    private val _filteredEntries = MutableStateFlow<List<DictEntry>>(emptyList())
 
-    val filteredEntriesIds: Set<String>
-        get() = filteredEntries.map { it.id }.toSet()
+    val filteredEntriesIds: StateFlow<Set<String>> = _filteredEntries
+        .map { list -> list.map { it.id }.toSet() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptySet()
+        )
 
     private val _filteredEntriesCount = MutableStateFlow(0)
     val filteredEntriesCount: StateFlow<Int> = _filteredEntriesCount.asStateFlow()
@@ -153,7 +161,7 @@ class DictionaryViewModel : ViewModel() {
     }
 
     private fun setFilteredList(list: List<DictEntry>, totalSize: Int) {
-        filteredEntries = list
+        _filteredEntries.value = list
         _filteredEntriesCount.value = list.size
         _totalWords.value = totalSize
         _filteredEntriesFlow.value = list
@@ -256,7 +264,7 @@ class DictionaryViewModel : ViewModel() {
             incrementLoading()
             try {
                 applyFilter(repository.entriesFlow.value, maintainPage = false)
-                _statusMessage.value = UiText.StringResource(R.string.vm_status_found, listOf(filteredEntries.size))
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_found, listOf(_filteredEntries.value.size))
             } finally {
                 decrementLoading()
             }
@@ -414,11 +422,8 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 
-    fun getExportStringForSelected(selectedIds: Set<String>): String {
-        return runBlocking {
-            repository.getExportStringForSelected(selectedIds)
-        }
-    }
+    suspend fun getExportStringForSelected(selectedIds: Set<String>): String =
+        repository.getExportStringForSelected(selectedIds)
 
     fun resetUnsavedChanges() {
         repository.resetUnsavedChanges()
