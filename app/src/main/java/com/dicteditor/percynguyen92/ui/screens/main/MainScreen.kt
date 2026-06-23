@@ -21,6 +21,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,7 @@ import com.dicteditor.percynguyen92.data.EntryOpResult
 import com.dicteditor.percynguyen92.ui.screens.main.components.AppSideEffects
 import com.dicteditor.percynguyen92.ui.screens.main.components.AppTopBar
 import com.dicteditor.percynguyen92.ui.screens.main.components.BulkSelectionBar
+import com.dicteditor.percynguyen92.ui.screens.main.components.PaginationBar
 import com.dicteditor.percynguyen92.ui.components.CustomSnackbarVisuals
 import com.dicteditor.percynguyen92.ui.screens.main.components.MainContentArea
 import com.dicteditor.percynguyen92.ui.components.appBackground
@@ -56,9 +58,12 @@ import com.dicteditor.percynguyen92.ui.theme.LightColors
 import com.dicteditor.percynguyen92.viewmodel.DictionaryViewModel
 import com.dicteditor.percynguyen92.viewmodel.SnackbarType
 import com.dicteditor.percynguyen92.utils.UiText
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
 
 @Composable
 fun MainScreen(
@@ -90,6 +95,11 @@ fun MainScreen(
     val canRedo by viewModel.canRedo.collectAsStateWithLifecycle()
     val fileLoadError by viewModel.fileLoadError.collectAsStateWithLifecycle()
     val searchError by viewModel.searchError.collectAsStateWithLifecycle()
+    val updateInfo by viewModel.updateInfo.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkForUpdates(com.dicteditor.percynguyen92.BuildConfig.VERSION_NAME)
+    }
     
     // Dialog state controllers
     var showBatchImportDialog by remember { mutableStateOf(false) }
@@ -120,6 +130,21 @@ fun MainScreen(
     val snackbarUpdatedWord = stringResource(R.string.snackbar_updated_word)
     val snackbarAddedWord = stringResource(R.string.snackbar_added_word)
     val snackbarAiConnectedOk = stringResource(R.string.snackbar_ai_connected_ok)
+
+    val lazyListState = rememberLazyListState()
+    val pageSize = 200
+    val currentPage by remember {
+        derivedStateOf {
+            if (filteredCount == 0) 0 
+            else lazyListState.firstVisibleItemIndex / pageSize
+        }
+    }
+    val totalPages by remember {
+        derivedStateOf {
+            if (filteredCount == 0) 0
+            else (filteredCount + pageSize - 1) / pageSize
+        }
+    }
 
     // Manage effects and connection managers
     AppSideEffects(
@@ -189,11 +214,17 @@ fun MainScreen(
                         snackbarHostState.showCustomSnackbar(coroutineScope, snackbarUpdatedWord, SnackbarType.SUCCESS)
                     }
                     EntryOpResult.Merged -> {
-                        val mergedMsg = context.getString(R.string.snackbar_merged_word, chinese)
+                        val mergedMsg = UiText.StringResource(
+                            R.string.snackbar_merged_word,
+                            listOf(chinese)
+                        ).asString(context)
                         snackbarHostState.showCustomSnackbar(coroutineScope, mergedMsg, SnackbarType.SUCCESS)
                     }
                     EntryOpResult.Duplicate -> {
-                        val dupMsg = context.getString(R.string.error_duplicate_word_fallback, chinese)
+                        val dupMsg = UiText.StringResource(
+                            R.string.error_duplicate_word_fallback,
+                            listOf(chinese)
+                        ).asString(context)
                         snackbarHostState.showCustomSnackbar(coroutineScope, dupMsg, SnackbarType.ERROR)
                     }
                     else -> {}
@@ -278,7 +309,22 @@ fun MainScreen(
                 }
             )
         },
-        bottomBar = {},
+        bottomBar = {
+            if (openedFileUri != null && filteredCount > 0) {
+                PaginationBar(
+                    hazeState = hazeState,
+                    currentPage = currentPage,
+                    totalPages = totalPages,
+                    pageSize = pageSize,
+                    filteredCount = filteredCount,
+                    onFirstPage = { coroutineScope.launch { lazyListState.scrollToItem(0) } },
+                    onPrevPage = { coroutineScope.launch { lazyListState.scrollToItem(maxOf(0, (currentPage - 1) * pageSize)) } },
+                    onNextPage = { coroutineScope.launch { lazyListState.scrollToItem(minOf(filteredCount - 1, (currentPage + 1) * pageSize)) } },
+                    onLastPage = { coroutineScope.launch { lazyListState.scrollToItem(maxOf(0, (totalPages - 1) * pageSize)) } },
+                    onJumpToPage = { page -> coroutineScope.launch { lazyListState.scrollToItem(page * pageSize) } }
+                )
+            }
+        },
         floatingActionButton = {
             if (openedFileUri != null) {
                 BulkSelectionBar(
@@ -357,6 +403,7 @@ fun MainScreen(
                         selectedIds.remove(id)
                     }
                 },
+                lazyListState = lazyListState,
                 modifier = Modifier.fillMaxSize().hazeSource(hazeState),
                 contentPadding = innerPadding
             )
@@ -442,6 +489,20 @@ fun MainScreen(
         showAiErrorDialog = showAiErrorDialog,
         onDismissAiError = { showAiErrorDialog = false },
         isAtpConnected = isAtpConnected,
-        connectionError = connectionError
+        connectionError = connectionError,
+        updateInfo = updateInfo,
+        onDismissUpdate = viewModel::dismissUpdateDialog,
+        onConfirmUpdate = {
+            updateInfo?.releaseUrl?.let { url ->
+                if (url.isNotEmpty()) {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
     )
 }

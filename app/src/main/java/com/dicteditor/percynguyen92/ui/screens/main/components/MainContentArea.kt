@@ -4,6 +4,8 @@ import com.dicteditor.percynguyen92.ui.components.appBackground
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import androidx.compose.material.icons.Icons
@@ -42,6 +44,7 @@ fun MainContentArea(
     onDeleteConfirm: (String) -> Unit,
     onSelectedChange: (String, Boolean) -> Unit,
     searchError: String? = null,
+    lazyListState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -91,6 +94,7 @@ fun MainContentArea(
             // Lazy vertical dictionary elements list
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = lazyListState,
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,

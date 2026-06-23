@@ -35,7 +35,7 @@ fun AppSideEffects(
     }
 
     // Collect SharedFlow events for side effects (Toasts -> Snackbars)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(context) {
         viewModel.uiEvents.collect { event ->
             snackbarHostState.showCustomSnackbar(
                 scope = this,

@@ -48,13 +48,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dicteditor.percynguyen92.R
+import com.dicteditor.percynguyen92.utils.UiText
+import kotlin.time.Duration.Companion.seconds
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
 import com.dicteditor.percynguyen92.aitranslateportal.AiSuggestionParcel
 import com.dicteditor.percynguyen92.ui.screens.wordform.components.AiErrorCard
@@ -94,6 +98,7 @@ fun WordFormScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val clipboard = LocalClipboard.current
     val hazeState = remember { HazeState() }
     val snackbarHostState = remember { SnackbarHostState() }
     var undoJob by remember { mutableStateOf<Job?>(null) }
@@ -152,7 +157,26 @@ fun WordFormScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = glassTextFieldColors(),
                         shape = RoundedCornerShape(12.dp),
-                        singleLine = true
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        val clipEntry = clipboard.getClipEntry()
+                                        val text = clipEntry?.clipData?.getItemAt(0)?.text?.toString()
+                                        if (!text.isNullOrEmpty()) {
+                                            chinese = text
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentPaste,
+                                    contentDescription = stringResource(R.string.button_paste),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -183,12 +207,19 @@ fun WordFormScreen(
                         undoJob?.cancel()
                         undoJob = scope.launch {
                             val dismissJob = launch {
-                                delay(3000)
+                                delay(3.seconds)
                                 snackbarHostState.currentSnackbarData?.dismiss()
                             }
+                            val message = UiText.StringResource(
+                                R.string.snackbar_deleted_meaning,
+                                listOf(deletedMeaning)
+                            ).asString(context)
+                            val actionLabel = UiText.StringResource(
+                                R.string.button_undo
+                            ).asString(context)
                             val result = snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.snackbar_deleted_meaning, deletedMeaning),
-                                actionLabel = context.getString(R.string.button_undo),
+                                message = message,
+                                actionLabel = actionLabel,
                                 duration = SnackbarDuration.Indefinite
                             )
                             dismissJob.cancel()
@@ -312,7 +343,11 @@ fun WordFormScreen(
                                 
                                 val clearResult = atpConnectionManager.clearCache(chinese.trim())
                                 if (clearResult.isFailure) {
-                                    aiError = context.getString(R.string.error_clear_cache_failed, clearResult.exceptionOrNull()?.message ?: "")
+                                    val errorMsg = UiText.StringResource(
+                                        R.string.error_clear_cache_failed,
+                                        listOf(clearResult.exceptionOrNull()?.message ?: "")
+                                    ).asString(context)
+                                    aiError = errorMsg
                                     isTranslating = false
                                     return@launch
                                 }
@@ -321,7 +356,7 @@ fun WordFormScreen(
                                     context = context,
                                     scope = scope,
                                     chinese = chinese,
-                                    isAtpConnected = isAtpConnected,
+                                    isAtpConnected = true,
                                     atpConnectionManager = atpConnectionManager,
                                     onStart = {
                                         isTranslating = true
@@ -357,11 +392,11 @@ private fun fetchAiSuggestion(
     onFailure: (String) -> Unit
 ) {
     if (chinese.isBlank()) {
-        onFailure(context.getString(R.string.error_input_chinese_first))
+        onFailure(UiText.StringResource(R.string.error_input_chinese_first).asString(context))
         return
     }
     if (!isAtpConnected) {
-        onFailure(context.getString(R.string.error_ai_not_connected))
+        onFailure(UiText.StringResource(R.string.error_ai_not_connected).asString(context))
         atpConnectionManager.bindService()
         return
     }
@@ -374,10 +409,20 @@ private fun fetchAiSuggestion(
             result.onSuccess { parcel ->
                 onSuccess(parcel)
             }.onFailure { err ->
-                onFailure(context.getString(R.string.error_connection, err.message ?: ""))
+                onFailure(
+                    UiText.StringResource(
+                        R.string.error_connection,
+                        listOf(err.message ?: "")
+                    ).asString(context)
+                )
             }
         } catch (t: Throwable) {
-            onFailure(context.getString(R.string.error_crash, t.javaClass.simpleName, t.message ?: ""))
+            onFailure(
+                UiText.StringResource(
+                    R.string.error_crash,
+                    listOf(t.javaClass.simpleName, t.message ?: "")
+                ).asString(context)
+            )
             t.printStackTrace()
         }
     }

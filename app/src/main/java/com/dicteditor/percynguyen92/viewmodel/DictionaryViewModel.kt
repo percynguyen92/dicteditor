@@ -17,6 +17,8 @@ import com.dicteditor.percynguyen92.data.EntryOpResult
 import com.dicteditor.percynguyen92.data.RecentFilesManager
 import com.dicteditor.percynguyen92.data.SearchEngine
 import com.dicteditor.percynguyen92.utils.UiText
+import com.dicteditor.percynguyen92.utils.UpdateInfo
+import com.dicteditor.percynguyen92.utils.GithubUpdateChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -63,6 +65,9 @@ class DictionaryViewModel : ViewModel() {
 
     private val _uiEvents = MutableSharedFlow<UiSnackbarEvent>()
     val uiEvents: SharedFlow<UiSnackbarEvent> = _uiEvents.asSharedFlow()
+
+    private val _updateInfo = MutableStateFlow<UpdateInfo?>(null)
+    val updateInfo: StateFlow<UpdateInfo?> = _updateInfo.asStateFlow()
 
     private val _recentFiles = MutableStateFlow<List<Uri>>(emptyList())
     val recentFiles: StateFlow<List<Uri>> = _recentFiles.asStateFlow()
@@ -174,11 +179,10 @@ class DictionaryViewModel : ViewModel() {
                     val count = result.getOrThrow()
                     addRecentFile(context, uri)
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_loaded, listOf(count))
-                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_loaded, listOf(count)), SnackbarType.SUCCESS))
                 } else {
                     val exception = result.exceptionOrNull()
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_load_error)
-                    val errorMsg = exception?.message ?: context.getString(R.string.vm_error_unknown)
+                    val errorMsg = exception?.message ?: UiText.StringResource(R.string.vm_error_unknown).asString(context)
                     _fileLoadError.value = Pair(uri, errorMsg)
                     removeRecentFile(context, uri)
                 }
@@ -344,6 +348,21 @@ class DictionaryViewModel : ViewModel() {
 
     fun resetUnsavedChanges() {
         repository.resetUnsavedChanges()
+    }
+
+    fun checkForUpdates(currentVersion: String) {
+        viewModelScope.launch {
+            val info = withContext(Dispatchers.IO) {
+                GithubUpdateChecker.checkForUpdate(currentVersion)
+            }
+            if (info != null) {
+                _updateInfo.value = info
+            }
+        }
+    }
+
+    fun dismissUpdateDialog() {
+        _updateInfo.value = null
     }
 
 }

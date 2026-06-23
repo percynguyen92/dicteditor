@@ -6,6 +6,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentPaste
 import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.ui.components.glassTextFieldColors
 import com.dicteditor.percynguyen92.ui.components.HazeAlertDialog
@@ -19,6 +24,8 @@ fun BatchImportDialog(
 ) {
     var rawText by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf<String?>(null) }
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
 
     val emptyError = stringResource(R.string.dialog_batch_import_error_empty)
 
@@ -61,7 +68,27 @@ fun BatchImportDialog(
                     },
                     textStyle = MaterialTheme.typography.bodyLarge,
                     colors = glassTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    val clipEntry = clipboard.getClipEntry()
+                                    val text = clipEntry?.clipData?.getItemAt(0)?.text?.toString()
+                                    if (!text.isNullOrEmpty()) {
+                                        rawText = text
+                                        errorText = null
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentPaste,
+                                contentDescription = stringResource(R.string.button_paste),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 )
             }
         },

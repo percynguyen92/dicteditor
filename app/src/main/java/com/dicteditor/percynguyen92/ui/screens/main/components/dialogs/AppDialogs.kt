@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import com.dicteditor.percynguyen92.viewmodel.DictionaryViewModel
 import dev.chrisbanes.haze.HazeState
+import com.dicteditor.percynguyen92.utils.UpdateInfo
 
 @Composable
 fun AppDialogs(
@@ -25,8 +26,23 @@ fun AppDialogs(
     showAiErrorDialog: Boolean,
     onDismissAiError: () -> Unit,
     isAtpConnected: Boolean,
-    connectionError: String?
+    connectionError: String?,
+    updateInfo: UpdateInfo?,
+    onDismissUpdate: () -> Unit,
+    onConfirmUpdate: () -> Unit
 ) {
+    if (updateInfo != null) {
+        UpdateDialog(
+            hazeState = hazeState,
+            updateInfo = updateInfo,
+            onDismiss = onDismissUpdate,
+            onUpdate = {
+                onConfirmUpdate()
+                onDismissUpdate()
+            }
+        )
+    }
+
     if (showBatchImportDialog) {
         BatchImportDialog(
             hazeState = hazeState,

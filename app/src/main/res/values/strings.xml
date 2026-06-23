@@ -97,10 +97,11 @@
     <string name="dialog_bulk_delete_title">Xóa nhiều từ?</string>
     <string name="dialog_bulk_delete_message">Bạn có chắc chắn muốn xóa %1$d từ đã chọn?</string>
     <string name="dialog_delete">Xóa</string>
-    <string name="dialog_batch_import_title">Nhập từ hàng loạt (Batch)</string>
+    <string name="dialog_batch_import_title">Nhập nhiều từ</string>
     <string name="dialog_batch_import_message">Dán các dòng từ điển có định dạng \'tiếng_Trung=nghĩa1/nghĩa2\'. \nMỗi từ nằm trên 1 dòng độc lập.\nTrùng lặp với từ đã có sẽ được gộp vào phía trước nghĩa cũ( ưu tiên hơn)</string>
     <string name="dialog_batch_import_hint">Ví dụ.\n龙=rồng/long\n火=lửa/hỏa\n水=nước/thủy</string>
     <string name="dialog_batch_import_error_empty">Nội dung paste không được rỗng</string>
+    <string name="button_paste">Dán</string>
     <string name="dialog_import">Import</string>
     <string name="dialog_ai_error_title">Lỗi kết nối AI</string>
     <string name="dialog_ai_error_cause">Nguyên nhân: %1$s</string>
@@ -164,9 +165,14 @@
     <string name="vm_status_replaced">Thay thế: %1$d lần</string>
     <string name="vm_snackbar_regex_error">Lỗi Regex: %1$s</string>
     <string name="vm_status_regex_error">Lỗi Regex</string>
-    <string name="vm_status_importing">Đang import hàng loạt&#8230;</string>
+    <string name="vm_status_importing">Đang import  &#8230;</string>
     <string name="vm_snackbar_imported">Đã import %1$d từ mới, gộp %2$d từ trùng và bỏ qua %3$d dòng lỗi</string>
     <string name="vm_status_imported">Đã import %1$d từ, gộp %2$d</string>
-    <string name="vm_snackbar_import_error">Lỗi khi batch import: %1$s</string>
+    <string name="vm_snackbar_import_error">Lỗi khi import: %1$s</string>
+    <!-- Update Check -->
+    <string name="dialog_update_title">Cập nhật phiên bản mới</string>
+    <string name="dialog_update_message">Đã có phiên bản mới %1$s. Bạn có muốn cập nhật không?\n\nNhật ký thay đổi:\n%2$s</string>
+    <string name="dialog_update_button_update">Cập nhật</string>
+    <string name="dialog_update_button_later">Để sau</string>
 </resources>
 

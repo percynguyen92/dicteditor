@@ -62,6 +62,7 @@ fun MeaningList(
         Text(
             text = stringResource(R.string.label_meanings),
             style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 4.dp)
         )
         
@@ -70,104 +71,107 @@ fun MeaningList(
             val zIndex = if (isDragged) 1f else 0f
             val translationY = if (isDragged) dragOffset else 0f
             
-            Row(
+            val currentText = localMeanings.getOrNull(index) ?: ""
+
+            OutlinedTextField(
+                value = currentText,
+                onValueChange = { newValue ->
+                    localMeanings = localMeanings.toMutableList().apply {
+                        set(index, newValue)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .zIndex(zIndex)
                     .graphicsLayer { this.translationY = translationY }
-                    .hazeGlassmorphism(hazeState, cornerRadius = 12)
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DragHandle,
-                    contentDescription = stringResource(R.string.description_drag_to_reorder),
-                    modifier = Modifier
-                        .pointerInput(Unit) {
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = { draggedIndex = index; dragOffset = 0f },
-                                onDragEnd = { draggedIndex = null; dragOffset = 0f },
-                                onDragCancel = { draggedIndex = null; dragOffset = 0f },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    dragOffset += dragAmount.y
-                                    
-                                    if (dragOffset > itemHeightPx && index < localMeanings.size - 1) {
-                                        val newList = localMeanings.toMutableList()
-                                        java.util.Collections.swap(newList, index, index + 1)
-                                        localMeanings = newList
-                                        onMeaningsChange(newList)
-                                        draggedIndex = index + 1
-                                        dragOffset -= itemHeightPx
-                                    } else if (dragOffset < -itemHeightPx && index > 0) {
-                                        val newList = localMeanings.toMutableList()
-                                        java.util.Collections.swap(newList, index, index - 1)
-                                        localMeanings = newList
-                                        onMeaningsChange(newList)
-                                        draggedIndex = index - 1
-                                        dragOffset += itemHeightPx
+                    .hazeGlassmorphism(hazeState, cornerRadius = 12),
+                shape = RoundedCornerShape(12.dp),
+                colors = glassTextFieldColors(),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.DragHandle,
+                        contentDescription = stringResource(R.string.description_drag_to_reorder),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .pointerInput(Unit) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = { draggedIndex = index; dragOffset = 0f },
+                                    onDragEnd = { draggedIndex = null; dragOffset = 0f },
+                                    onDragCancel = { draggedIndex = null; dragOffset = 0f },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        dragOffset += dragAmount.y
+                                        
+                                        if (dragOffset > itemHeightPx && index < localMeanings.size - 1) {
+                                            val newList = localMeanings.toMutableList()
+                                            java.util.Collections.swap(newList, index, index + 1)
+                                            localMeanings = newList
+                                            onMeaningsChange(newList)
+                                            draggedIndex = index + 1
+                                            dragOffset -= itemHeightPx
+                                        } else if (dragOffset < -itemHeightPx && index > 0) {
+                                            val newList = localMeanings.toMutableList()
+                                            java.util.Collections.swap(newList, index, index - 1)
+                                            localMeanings = newList
+                                            onMeaningsChange(newList)
+                                            draggedIndex = index - 1
+                                            dragOffset += itemHeightPx
+                                        }
                                     }
+                                )
+                            }
+                            .padding(8.dp)
+                    )
+                },
+                trailingIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val trimmed = currentText.trim()
+                                if (trimmed.isNotBlank()) {
+                                    val newList = localMeanings.toMutableList().apply {
+                                        set(index, trimmed)
+                                    }
+                                    localMeanings = newList
+                                    onMeaningsChange(newList)
                                 }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Done",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
-                        .padding(8.dp)
-                )
-                
-                val currentText = localMeanings.getOrNull(index) ?: ""
-                OutlinedTextField(
-                    value = currentText,
-                    onValueChange = { newValue ->
-                        localMeanings = localMeanings.toMutableList().apply {
-                            set(index, newValue)
-                        }
-                    },
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                    singleLine = true,
-                    colors = glassTextFieldColors(),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = {
-                        val trimmed = currentText.trim()
-                        if (trimmed.isNotBlank()) {
-                            val newList = localMeanings.toMutableList().apply {
-                                set(index, trimmed)
+                        
+                        IconButton(
+                            onClick = {
+                                onDeleteMeaning(index, currentText)
                             }
-                            localMeanings = newList
-                            onMeaningsChange(newList)
-                        }
-                    })
-                )
-                
-                IconButton(
-                    onClick = {
-                        val trimmed = currentText.trim()
-                        if (trimmed.isNotBlank()) {
-                            val newList = localMeanings.toMutableList().apply {
-                                set(index, trimmed)
-                            }
-                            localMeanings = newList
-                            onMeaningsChange(newList)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.description_remove),
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Done",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                
-                IconButton(
-                    onClick = {
-                        onDeleteMeaning(index, currentText)
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    val trimmed = currentText.trim()
+                    if (trimmed.isNotBlank()) {
+                        val newList = localMeanings.toMutableList().apply {
+                            set(index, trimmed)
+                        }
+                        localMeanings = newList
+                        onMeaningsChange(newList)
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.description_remove),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
+                })
+            )
         }
         
         Row(
@@ -181,7 +185,6 @@ fun MeaningList(
                 modifier = Modifier.weight(1f),
                 colors = glassTextFieldColors(),
                 shape = RoundedCornerShape(12.dp),
-                singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
                     if (newMeaning.isNotBlank()) {
@@ -202,7 +205,8 @@ fun MeaningList(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.label_add_meaning)
+                    contentDescription = stringResource(R.string.label_add_meaning),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

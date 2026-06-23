@@ -5,8 +5,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.dicteditor.percynguyen92.ui.theme.MyApplicationTheme
-import com.dicteditor.percynguyen92.ui.components.EmptyStateView
-import com.dicteditor.percynguyen92.ui.components.SearchBar
+import com.dicteditor.percynguyen92.ui.screens.main.components.EmptyStateView
+import com.dicteditor.percynguyen92.ui.screens.main.components.SearchBar
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
