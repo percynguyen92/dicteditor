@@ -11,7 +11,7 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.dicteditor.vlkqz"
+    applicationId = "com.dicteditor.percynguyen92"
     minSdk = 24
     targetSdk = 36
     versionCode = 3

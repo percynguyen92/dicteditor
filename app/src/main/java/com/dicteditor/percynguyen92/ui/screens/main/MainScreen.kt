@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -414,7 +413,7 @@ fun MainScreen(
                     .align(Alignment.TopCenter)
                     .padding(top = innerPadding.calculateTopPadding())
             ) { data ->
-                val isDark = isSystemInDarkTheme()
+                val isDark = true
                 val type = (data.visuals as? CustomSnackbarVisuals)?.type ?: SnackbarType.INFO
                 val statusColor = when (type) {
                     SnackbarType.SUCCESS -> if (isDark) DarkColors.Success else LightColors.Success

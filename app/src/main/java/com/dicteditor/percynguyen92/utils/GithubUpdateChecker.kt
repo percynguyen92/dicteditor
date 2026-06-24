@@ -15,14 +15,14 @@ object GithubUpdateChecker {
     private const val API_URL = "https://api.github.com/repos/percynguyen92/dicteditor/releases/latest"
 
     fun checkForUpdate(currentVersion: String): UpdateInfo? {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url(API_URL)
-            .header("Accept", "application/vnd.github.v3+json")
-            .header("User-Agent", "DictEditor-App")
-            .build()
-
         try {
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url(API_URL)
+                .header("Accept", "application/vnd.github.v3+json")
+                .header("User-Agent", "DictEditor-App")
+                .build()
+
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return null
                 val bodyStr = response.body?.string() ?: return null
@@ -35,10 +35,8 @@ object GithubUpdateChecker {
                     return UpdateInfo(latestVersion, releaseUrl, changelog)
                 }
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (t: Throwable) {
+            t.printStackTrace()
         }
         return null
     }

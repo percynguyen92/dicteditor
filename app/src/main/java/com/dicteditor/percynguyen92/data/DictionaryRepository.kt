@@ -75,7 +75,7 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
 
         val loaded = try {
             FileHandler.readLines(context.applicationContext, uri)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             return Result.failure(e)
         }
 

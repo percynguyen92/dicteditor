@@ -16,7 +16,7 @@ fun getFileName(context: Context, uri: Uri): String {
                     }
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // ignore
         }
     }

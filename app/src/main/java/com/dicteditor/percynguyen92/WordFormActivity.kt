@@ -2,10 +2,12 @@ package com.dicteditor.percynguyen92
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
 import com.dicteditor.percynguyen92.ui.screens.wordform.WordFormScreen
 import com.dicteditor.percynguyen92.ui.theme.MyApplicationTheme
@@ -16,7 +18,10 @@ class WordFormActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+        )
         
         atpConnectionManager = AiPortalConnectionManager(this)
         

@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.data.DictEntry
@@ -49,7 +48,7 @@ fun MainContentArea(
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     Box(
-        modifier = modifier.fillMaxWidth().appBackground(isSystemInDarkTheme())
+        modifier = modifier.fillMaxWidth().appBackground(true)
     ) {
         if (openedFileUri == null) {
             Box(modifier = Modifier.padding(contentPadding)) {
