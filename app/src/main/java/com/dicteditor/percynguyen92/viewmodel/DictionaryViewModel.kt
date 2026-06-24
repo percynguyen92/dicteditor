@@ -361,6 +361,18 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 
+    fun triggerManualUpdateCheck(currentVersion: String, onFinished: (UpdateInfo?) -> Unit) {
+        viewModelScope.launch {
+            val info = withContext(Dispatchers.IO) {
+                GithubUpdateChecker.checkForUpdate(currentVersion)
+            }
+            if (info != null) {
+                _updateInfo.value = info
+            }
+            onFinished(info)
+        }
+    }
+
     fun dismissUpdateDialog() {
         _updateInfo.value = null
     }

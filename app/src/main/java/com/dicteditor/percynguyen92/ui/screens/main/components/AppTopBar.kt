@@ -51,6 +51,7 @@ fun AppTopBar(
     onBatchImportClick: () -> Unit,
     onCheckAiConnectionClick: () -> Unit,
     onExitClick: () -> Unit,
+    onAboutClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onReplaceQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
@@ -272,6 +273,16 @@ fun AppTopBar(
                                         onCheckAiConnectionClick()
                                     },
                                     modifier = Modifier.testTag("check_ai_connection_menu")
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.menu_about)) },
+                                    leadingIcon = { Icon(Icons.Default.Info, contentDescription = stringResource(R.string.menu_about)) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onAboutClick()
+                                    },
+                                    modifier = Modifier.testTag("about_menu")
                                 )
                             }
                         }

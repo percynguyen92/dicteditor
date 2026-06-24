@@ -41,6 +41,7 @@ import com.dicteditor.percynguyen92.WordFormActivity
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
 import com.dicteditor.percynguyen92.data.DictEntry
 import com.dicteditor.percynguyen92.data.EntryOpResult
+import com.dicteditor.percynguyen92.ui.screens.about.AboutScreen
 import com.dicteditor.percynguyen92.ui.screens.main.components.AppSideEffects
 import com.dicteditor.percynguyen92.ui.screens.main.components.AppTopBar
 import com.dicteditor.percynguyen92.ui.screens.main.components.BulkSelectionBar
@@ -106,6 +107,7 @@ fun MainScreen(
     var showCloseFileWarningDialog by remember { mutableStateOf(false) }
     var showBulkDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showAiErrorDialog by remember { mutableStateOf(false) }
+    var showAboutScreen by remember { mutableStateOf(false) }
 
     // Replace mode state
     var isReplaceMode by remember { mutableStateOf(false) }
@@ -156,7 +158,11 @@ fun MainScreen(
     )
 
     // Intercept back actions
-    BackHandler(enabled = openedFileUri != null || hasUnsavedChanges) {
+    BackHandler(enabled = showAboutScreen || openedFileUri != null || hasUnsavedChanges) {
+        if (showAboutScreen) {
+            showAboutScreen = false
+            return@BackHandler
+        }
         if (openedFileUri != null) {
             if (hasUnsavedChanges) {
                 showCloseFileWarningDialog = true
@@ -236,11 +242,19 @@ fun MainScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .appBackground(),
-        topBar = {
+    if (showAboutScreen) {
+        AboutScreen(
+            onBack = { showAboutScreen = false },
+            onCheckUpdates = { onFinished ->
+                viewModel.triggerManualUpdateCheck(com.dicteditor.percynguyen92.BuildConfig.VERSION_NAME, onFinished)
+            }
+        )
+    } else {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .appBackground(),
+            topBar = {
             AppTopBar(
                 hazeState = hazeState,
                 openedFileUri = openedFileUri,
@@ -279,6 +293,7 @@ fun MainScreen(
                         onExit()
                     }
                 },
+                onAboutClick = { showAboutScreen = true },
                 isReplaceMode = isReplaceMode,
                 replaceQuery = replaceQuery,
                 onSearchQueryChange = {
@@ -458,6 +473,7 @@ fun MainScreen(
                 }
             }
         }
+    }
     }
 
     AppDialogs(

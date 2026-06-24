@@ -174,5 +174,19 @@
     <string name="dialog_update_message">Đã có phiên bản mới %1$s. Bạn có muốn cập nhật không?\n\nNhật ký thay đổi:\n%2$s</string>
     <string name="dialog_update_button_update">Cập nhật</string>
     <string name="dialog_update_button_later">Để sau</string>
+
+    <!-- About Screen -->
+    <string name="menu_about">Thông tin app</string>
+    <string name="title_about">Thông tin ứng dụng</string>
+    <string name="label_author">Tác giả</string>
+    <string name="value_author">percynguyen92</string>
+    <string name="label_version">Phiên bản</string>
+    <string name="label_license">Bản quyền</string>
+    <string name="value_license">MIT License</string>
+    <string name="label_github_repo">GitHub Repository</string>
+    <string name="value_github_url">https://github.com/percynguyen92/dicteditor</string>
+    <string name="button_check_updates">Kiểm tra cập nhật</string>
+    <string name="button_checking_updates">Đang kiểm tra&#8230;</string>
+    <string name="toast_up_to_date">Ứng dụng đã ở phiên bản mới nhất</string>
 </resources>
 
