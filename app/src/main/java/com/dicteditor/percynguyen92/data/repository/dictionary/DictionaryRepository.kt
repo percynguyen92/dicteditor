@@ -3,6 +3,8 @@ package com.dicteditor.percynguyen92.data.repository.dictionary
 import android.content.Context
 import android.net.Uri
 import com.dicteditor.percynguyen92.data.model.DictEntry
+import com.dicteditor.percynguyen92.data.model.InvalidLine
+import com.dicteditor.percynguyen92.data.model.ParseResult
 import com.dicteditor.percynguyen92.data.local.FileHandler
 import com.dicteditor.percynguyen92.utils.SearchEngine
 import com.dicteditor.percynguyen92.data.usecase.ExportUseCase
@@ -45,6 +47,7 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
     private val exportUseCase = ExportUseCase(state)
 
     val entriesFlow: StateFlow<List<DictEntry>> = state.entriesFlow
+    val invalidLinesFlow: StateFlow<List<InvalidLine>> = state.invalidLinesFlow
     val hasUnsavedChanges: StateFlow<Boolean> = state.hasUnsavedChanges
     val canUndo: StateFlow<Boolean> = state.canUndo
     val canRedo: StateFlow<Boolean> = state.canRedo
@@ -65,9 +68,30 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
             state.activeLoadSessionId
         }
 
+        val localInvalidLines = ArrayList<InvalidLine>()
+        var idCounter = 1
+        var invalidIdCounter = 1
+
         val loaded = try {
-            FileHandler.readLines(context.applicationContext, uri) { line, index ->
-                DictEntry.parse(line, "entry_$index")
+            FileHandler.readLines(context.applicationContext, uri) { line, lineNumber ->
+                when (val result = DictEntry.parse(line, "entry_$idCounter")) {
+                    is ParseResult.Success -> {
+                        idCounter++
+                        result.entry
+                    }
+                    is ParseResult.Failure -> {
+                        localInvalidLines.add(
+                            InvalidLine(
+                                id = "invalid_$invalidIdCounter",
+                                lineNumber = lineNumber,
+                                lineContent = line,
+                                error = result.error
+                            )
+                        )
+                        invalidIdCounter++
+                        null
+                    }
+                }
             }
         } catch (e: Throwable) {
             return Result.failure(e)
@@ -79,7 +103,8 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
             }
             state.allEntries = ArrayList(loaded)
             state.savedState = ArrayList(loaded)
-            state.lastLoadedIdCounter = state.allEntries.size + 1
+            state.invalidLines = localInvalidLines
+            state.lastLoadedIdCounter = idCounter
             state.historyManager.clear()
             state.setOpenedFileUri(uri)
             state.clearHighlightedIds()
@@ -118,6 +143,7 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
             state.setOpenedFileUri(null)
             state.allEntries = ArrayList()
             state.savedState = ArrayList()
+            state.invalidLines = ArrayList()
             state.historyManager.clear()
             state.clearHighlightedIds()
             state.updateStateFlowsLocked()

@@ -1,6 +1,7 @@
 package com.dicteditor.percynguyen92.data.usecase
 
 import com.dicteditor.percynguyen92.data.model.DictEntry
+import com.dicteditor.percynguyen92.data.model.ParseResult
 import com.dicteditor.percynguyen92.data.repository.dictionary.DictionaryStateHolder
 import com.dicteditor.percynguyen92.data.repository.dictionary.ImportMergeMode
 import com.dicteditor.percynguyen92.data.repository.dictionary.ImportResult
@@ -20,13 +21,12 @@ class MergeEntriesUseCase(private val state: DictionaryStateHolder) {
         var invalidSkipCount = 0
 
         val parsedEntries = lines.mapNotNull { line ->
-            if (line.trim().isEmpty()) return@mapNotNull null
-            val entry = DictEntry.parse(line)
-            if (entry == null) {
-                invalidSkipCount++
-                null
-            } else {
-                entry
+            when (val result = DictEntry.parse(line)) {
+                is ParseResult.Success -> result.entry
+                is ParseResult.Failure -> {
+                    invalidSkipCount++
+                    null
+                }
             }
         }
 

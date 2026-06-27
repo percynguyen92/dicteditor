@@ -16,20 +16,19 @@ object FileHandler {
     suspend fun <T> readLines(
         context: Context,
         uri: Uri,
-        transform: (line: String, index: Int) -> T?
+        transform: (line: String, lineNumber: Int) -> T?
     ): List<T> = withContext(Dispatchers.IO) {
         val entries = ArrayList<T>()
-        var idCounter = 1
 
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
             inputStream.bufferedReader(Charsets.UTF_8).useLines { lines ->
                 var lineCount = 0
                 lines.forEach { line ->
-                    if (lineCount++ % YIELD_BATCH_SIZE == 0) yield()
-                    val entry = transform(line, idCounter)
+                    lineCount++
+                    if (lineCount % YIELD_BATCH_SIZE == 0) yield()
+                    val entry = transform(line, lineCount)
                     if (entry != null) {
                         entries.add(entry)
-                        idCounter++
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.ui.screens.main.components
+package com.dicteditor.percynguyen92.ui.components.DictEntriesList
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween

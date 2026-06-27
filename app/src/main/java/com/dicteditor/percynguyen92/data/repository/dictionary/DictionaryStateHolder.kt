@@ -2,6 +2,7 @@ package com.dicteditor.percynguyen92.data.repository.dictionary
 
 import android.net.Uri
 import com.dicteditor.percynguyen92.data.model.DictEntry
+import com.dicteditor.percynguyen92.data.model.InvalidLine
 import com.dicteditor.percynguyen92.utils.HistoryManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,10 @@ class DictionaryStateHolder(maxHistorySize: Int = 10) {
     private val _entriesFlow = MutableStateFlow<List<DictEntry>>(emptyList())
     val entriesFlow: StateFlow<List<DictEntry>> = _entriesFlow.asStateFlow()
 
+    var invalidLines = ArrayList<InvalidLine>()
+    private val _invalidLinesFlow = MutableStateFlow<List<InvalidLine>>(emptyList())
+    val invalidLinesFlow: StateFlow<List<InvalidLine>> = _invalidLinesFlow.asStateFlow()
+
     private val _hasUnsavedChanges = MutableStateFlow(false)
     val hasUnsavedChanges: StateFlow<Boolean> = _hasUnsavedChanges.asStateFlow()
 
@@ -39,6 +44,7 @@ class DictionaryStateHolder(maxHistorySize: Int = 10) {
 
     suspend fun updateStateFlowsLocked() {
         _entriesFlow.value = ArrayList(allEntries)
+        _invalidLinesFlow.value = ArrayList(invalidLines)
         val hasChanges = withContext(Dispatchers.Default) {
             allEntries != savedState
         }
