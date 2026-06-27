@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.ui.components.glassTextFieldColors
 
 @Composable
@@ -55,8 +57,8 @@ fun SearchBar(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
             isError = searchError != null,
-            placeholder = { Text("Tìm kiếm...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Tìm kiếm") },
+            placeholder = { Text(stringResource(R.string.placeholder_search)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.description_search)) },
             trailingIcon = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -70,7 +72,7 @@ fun SearchBar(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Xóa tìm kiếm",
+                                contentDescription = stringResource(R.string.description_clear_search),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -128,7 +130,7 @@ fun SearchBar(
                 CustomOutlinedTextField(
                     value = replaceQuery,
                     onValueChange = onReplaceQueryChange,
-                    placeholder = { Text("Thay thế bằng...") },
+                    placeholder = { Text(stringResource(R.string.placeholder_replace)) },
                     shape = RoundedCornerShape(12.dp),
                     colors = glassTextFieldColors(),
                     modifier = Modifier
@@ -140,10 +142,10 @@ fun SearchBar(
                     onClick = onReplaceClick,
                     enabled = searchQuery.isNotEmpty(),
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("replace_button").fillMaxHeight()
+                    modifier = Modifier.testTag("replace_button").height(44.dp)
                 ) {
                     Text(
-                        text = "Thay thế",
+                        text = stringResource(R.string.button_replace),
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -156,7 +158,7 @@ fun SearchBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
-                        contentDescription = "Đóng chế độ thay thế",
+                        contentDescription = stringResource(R.string.description_close_replace_mode),
                         modifier = Modifier.size(20.dp)
                     )
                 }

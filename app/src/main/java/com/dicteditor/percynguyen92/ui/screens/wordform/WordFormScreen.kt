@@ -1,5 +1,6 @@
 package com.dicteditor.percynguyen92.ui.screens.wordform
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +79,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("NewApi")
 @Composable
 fun WordFormScreen(
     editMode: Boolean,

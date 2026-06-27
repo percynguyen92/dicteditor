@@ -97,13 +97,20 @@ fun AboutScreen(
                     color = Color.Transparent,
                     shadowElevation = 8.dp
                 ) {
-                    Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher),
-                        contentDescription = stringResource(R.string.app_name),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_background),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = stringResource(R.string.app_name),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -117,6 +124,8 @@ fun AboutScreen(
                     textAlign = TextAlign.Center
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // App Version
                 Text(
                     text = "${stringResource(R.string.label_version)} ${BuildConfig.VERSION_NAME}",
@@ -125,13 +134,13 @@ fun AboutScreen(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Check for updates button
                 var isChecking by remember { mutableStateOf(false) }
                 val context = LocalContext.current
 
-                Button(
+                TextButton(
                     onClick = {
                         isChecking = true
                         onCheckUpdates { info ->
@@ -145,10 +154,7 @@ fun AboutScreen(
                             }
                         }
                     },
-                    enabled = !isChecking,
-                    modifier = Modifier.hazeGlassmorphism(hazeState, cornerRadius = 12),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp)
+                    enabled = !isChecking
                 ) {
                     if (isChecking) {
                         CircularProgressIndicator(
@@ -158,13 +164,11 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.button_checking_updates),
-                            color = MaterialTheme.colorScheme.primary
+                            text = stringResource(R.string.button_checking_updates)
                         )
                     } else {
                         Text(
-                            text = stringResource(R.string.button_check_updates),
-                            color = MaterialTheme.colorScheme.primary
+                            text = stringResource(R.string.button_check_updates)
                         )
                     }
                 }

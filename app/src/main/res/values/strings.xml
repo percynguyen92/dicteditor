@@ -98,11 +98,33 @@
     <string name="dialog_bulk_delete_message">Bạn có chắc chắn muốn xóa %1$d từ đã chọn?</string>
     <string name="dialog_delete">Xóa</string>
     <string name="dialog_batch_import_title">Nhập nhiều từ</string>
-    <string name="dialog_batch_import_message">Dán các dòng từ điển có định dạng \'tiếng_Trung=nghĩa1/nghĩa2\'. \nMỗi từ nằm trên 1 dòng độc lập.\nTrùng lặp với từ đã có sẽ được gộp vào phía trước nghĩa cũ( ưu tiên hơn)</string>
-    <string name="dialog_batch_import_hint">Ví dụ.\n龙=rồng/long\n火=lửa/hỏa\n水=nước/thủy</string>
-    <string name="dialog_batch_import_error_empty">Nội dung paste không được rỗng</string>
+    <string name="dialog_batch_import_message">- Dán các dòng từ điển có định dạng \'tiếng_Trung=nghĩa1/nghĩa2\'. \nMỗi từ nằm trên 1 dòng độc lập.\nTrùng lặp với từ đã có sẽ được gộp vào phía trước nghĩa cũ( ưu tiên hơn)</string>
+    <string name="dialog_batch_import_hint">- Ví dụ.\n龙=rồng/long\n火=lửa/hỏa\n水=nước/thủy</string>
+    <string name="dialog_batch_import_error_empty">- Nội dung paste không được rỗng</string>
     <string name="button_paste">Dán</string>
     <string name="dialog_import">Import</string>
+
+    <!-- Import Screen -->
+    <string name="title_import">Nhập từ điển</string>
+    <string name="import_open_file">Thêm từ file (.txt)</string>
+    <string name="import_file_loaded">Đã tải %1$d từ từ file</string>
+    <string name="import_merge_mode_label">Chế độ gộp từ trùng</string>
+    <string name="import_mode_replace">Thay thế</string>
+    <string name="import_mode_replace_desc">Thay toàn bộ nghĩa cũ bằng nghĩa mới</string>
+    <string name="import_mode_append">Thêm sau</string>
+    <string name="import_mode_append_desc">Giữ nghĩa cũ, thêm nghĩa mới vào sau</string>
+    <string name="import_mode_insert">Chèn trước</string>
+    <string name="import_mode_insert_desc">Giữ nghĩa cũ, thêm nghĩa mới vào trước</string>
+    <string name="import_preview_title">Xem trước (%1$d từ)</string>
+    <string name="import_preview_empty">Chưa có từ nào. Hãy chọn file hoặc dán nội dung vào ô bên trên.</string>
+    <string name="import_button_confirm">Nhập %1$d từ</string>
+    <string name="import_button_clear">Xoá</string>
+    <string name="import_error_no_entries">Không có từ nào hợp lệ để nhập</string>
+    <string name="import_invalid_lines_skipped">Đã bỏ qua %1$d dòng không hợp lệ</string>
+    <string name="import_preview_topbar_title">Preview</string>
+    <string name="import_button_cancel">Huỷ</string>
+    <string name="import_button_save">Lưu</string>
+    <string name="import_button_next_preview">Xem trước</string>
     <string name="dialog_ai_error_title">Lỗi kết nối AI</string>
     <string name="dialog_ai_error_cause">Nguyên nhân: %1$s</string>
     <string name="dialog_ai_connecting_title">Đang kết nối AI&#8230;</string>
@@ -176,14 +198,14 @@
     <string name="dialog_update_button_later">Để sau</string>
 
     <!-- About Screen -->
-    <string name="menu_about">Thông tin app</string>
+    <string name="menu_about">Thông tin</string>
     <string name="title_about">Thông tin ứng dụng</string>
     <string name="label_author">Tác giả</string>
     <string name="value_author">percynguyen92</string>
     <string name="label_version">Phiên bản</string>
     <string name="label_license">Bản quyền</string>
     <string name="value_license">MIT License</string>
-    <string name="label_github_repo">GitHub Repository</string>
+    <string name="label_github_repo">GitHub</string>
     <string name="value_github_url">https://github.com/percynguyen92/dicteditor</string>
     <string name="button_check_updates">Kiểm tra cập nhật</string>
     <string name="button_checking_updates">Đang kiểm tra&#8230;</string>
