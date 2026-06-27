@@ -1,7 +1,7 @@
 package com.dicteditor.percynguyen92.viewmodel
 
-import com.dicteditor.percynguyen92.data.DictEntry
-import com.dicteditor.percynguyen92.data.SearchEngine
+import com.dicteditor.percynguyen92.data.model.DictEntry
+import com.dicteditor.percynguyen92.utils.SearchEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

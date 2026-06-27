@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.data
+package com.dicteditor.percynguyen92.data.local
 
 import android.content.Context
 import android.net.Uri
@@ -13,8 +13,12 @@ object FileHandler {
     private val writeMutex = Mutex()
     private const val YIELD_BATCH_SIZE = 50_000
 
-    suspend fun readLines(context: Context, uri: Uri): List<DictEntry> = withContext(Dispatchers.IO) {
-        val entries = ArrayList<DictEntry>()
+    suspend fun <T> readLines(
+        context: Context,
+        uri: Uri,
+        transform: (line: String, index: Int) -> T?
+    ): List<T> = withContext(Dispatchers.IO) {
+        val entries = ArrayList<T>()
         var idCounter = 1
 
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -22,7 +26,7 @@ object FileHandler {
                 var lineCount = 0
                 lines.forEach { line ->
                     if (lineCount++ % YIELD_BATCH_SIZE == 0) yield()
-                    val entry = DictEntry.parse(line, "entry_$idCounter")
+                    val entry = transform(line, idCounter)
                     if (entry != null) {
                         entries.add(entry)
                         idCounter++
@@ -33,15 +37,20 @@ object FileHandler {
         entries
     }
 
-    suspend fun writeLines(context: Context, uri: Uri, entries: List<DictEntry>): Int = withContext(Dispatchers.IO) {
+    suspend fun <T> writeLines(
+        context: Context,
+        uri: Uri,
+        items: List<T>,
+        transform: (T) -> String
+    ): Int = withContext(Dispatchers.IO) {
         writeMutex.withLock {
             val tempFile = java.io.File.createTempFile("dict_save_", ".tmp", context.cacheDir)
             try {
                 tempFile.bufferedWriter(Charsets.UTF_8).use { writer ->
                     var writeCount = 0
-                    entries.forEach { entry ->
+                    items.forEach { item ->
                         if (writeCount++ % YIELD_BATCH_SIZE == 0) yield()
-                        writer.write(entry.toLine())
+                        writer.write(transform(item))
                         writer.newLine()
                     }
                 }
@@ -53,7 +62,7 @@ object FileHandler {
             } finally {
                 try { tempFile.delete() } catch (e: Exception) {}
             }
-            entries.size
+            items.size
         }
     }
 }

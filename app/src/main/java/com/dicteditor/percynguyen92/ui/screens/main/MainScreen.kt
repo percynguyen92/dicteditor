@@ -39,8 +39,8 @@ import com.dicteditor.percynguyen92.ExportSession
 import com.dicteditor.percynguyen92.R
 import com.dicteditor.percynguyen92.WordFormActivity
 import com.dicteditor.percynguyen92.aitranslateportal.AiPortalConnectionManager
-import com.dicteditor.percynguyen92.data.DictEntry
-import com.dicteditor.percynguyen92.data.EntryOpResult
+import com.dicteditor.percynguyen92.data.model.DictEntry
+import com.dicteditor.percynguyen92.data.repository.dictionary.EntryOpResult
 import com.dicteditor.percynguyen92.ui.screens.about.AboutScreen
 import com.dicteditor.percynguyen92.ui.screens.main.components.AppSideEffects
 import com.dicteditor.percynguyen92.ui.screens.main.components.AppTopBar
@@ -51,6 +51,7 @@ import com.dicteditor.percynguyen92.ui.screens.main.components.MainContentArea
 import com.dicteditor.percynguyen92.ui.components.appBackground
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.dicteditor.percynguyen92.ui.screens.main.components.dialogs.AppDialogs
+import com.dicteditor.percynguyen92.ui.screens.import_screen.ImportScreen
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
 import com.dicteditor.percynguyen92.ui.components.showCustomSnackbar
 import com.dicteditor.percynguyen92.ui.theme.DarkColors
@@ -102,7 +103,7 @@ fun MainScreen(
     }
     
     // Dialog state controllers
-    var showBatchImportDialog by remember { mutableStateOf(false) }
+    var showImportScreen by remember { mutableStateOf(false) }
     var showExitWarningDialog by remember { mutableStateOf(false) }
     var showCloseFileWarningDialog by remember { mutableStateOf(false) }
     var showBulkDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -158,7 +159,11 @@ fun MainScreen(
     )
 
     // Intercept back actions
-    BackHandler(enabled = showAboutScreen || openedFileUri != null || hasUnsavedChanges) {
+    BackHandler(enabled = showImportScreen || showAboutScreen || openedFileUri != null || hasUnsavedChanges) {
+        if (showImportScreen) {
+            showImportScreen = false
+            return@BackHandler
+        }
         if (showAboutScreen) {
             showAboutScreen = false
             return@BackHandler
@@ -242,7 +247,15 @@ fun MainScreen(
         }
     }
 
-    if (showAboutScreen) {
+    if (showImportScreen) {
+        ImportScreen(
+            onBack = { showImportScreen = false },
+            onImport = { entries, mergeMode ->
+                viewModel.batchImportEntries(entries, mergeMode)
+                showImportScreen = false
+            }
+        )
+    } else if (showAboutScreen) {
         AboutScreen(
             onBack = { showAboutScreen = false },
             onCheckUpdates = { onFinished ->
@@ -277,7 +290,7 @@ fun MainScreen(
                 onSortDefaultLengthDescending = viewModel::sortByDefaultLengthDescending,
                 onSortLengthAscending = viewModel::sortByLengthAscending,
                 onFindReplaceClick = { isReplaceMode = !isReplaceMode },
-                onBatchImportClick = { showBatchImportDialog = true },
+                onBatchImportClick = { showImportScreen = true },
                 onCheckAiConnectionClick = {
                     if (isAtpConnected) {
                         snackbarHostState.showCustomSnackbar(coroutineScope, snackbarAiConnectedOk, SnackbarType.SUCCESS)
@@ -480,8 +493,6 @@ fun MainScreen(
         context = context,
         viewModel = viewModel,
         hazeState = hazeState,
-        showBatchImportDialog = showBatchImportDialog,
-        onDismissBatchImport = { showBatchImportDialog = false },
         showCloseFileWarningDialog = showCloseFileWarningDialog,
         onDismissCloseFileWarning = { showCloseFileWarningDialog = false },
         onConfirmCloseFile = { save ->

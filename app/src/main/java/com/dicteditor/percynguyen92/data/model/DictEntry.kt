@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.data
+package com.dicteditor.percynguyen92.data.model
 
 data class DictEntry(
     val id: String,
@@ -8,7 +8,7 @@ data class DictEntry(
     fun toLine(): String = "$chinese=${meanings.joinToString("/")}"
 
     companion object {
-        fun parse(line: String, id: String): DictEntry? {
+        fun parse(line: String, id: String? = null): DictEntry? {
             if (line.isBlank()) return null
             
             val eqIndex = line.indexOf('=')
@@ -19,7 +19,8 @@ data class DictEntry(
 
             val meaningsStr = line.substring(eqIndex + 1).trim()
             
-            return DictEntry(id, chinese, parseMeanings(meaningsStr))
+            val finalId = id ?: "entry_temp_${System.nanoTime()}_${(1..1000).random()}"
+            return DictEntry(finalId, chinese, parseMeanings(meaningsStr))
         }
 
         private fun parseMeanings(meaningsStr: String): List<String> {

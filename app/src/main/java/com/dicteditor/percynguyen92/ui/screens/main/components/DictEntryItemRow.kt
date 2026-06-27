@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.dicteditor.percynguyen92.R
-import com.dicteditor.percynguyen92.data.DictEntry
+import com.dicteditor.percynguyen92.data.model.DictEntry
 
 import dev.chrisbanes.haze.HazeState
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism

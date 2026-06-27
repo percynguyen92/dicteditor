@@ -1,7 +1,8 @@
-package com.dicteditor.percynguyen92.data
+package com.dicteditor.percynguyen92.data.local
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.dicteditor.percynguyen92.data.model.DictEntry
 
 class DictEntryPagingSource(
     private val entries: List<DictEntry>

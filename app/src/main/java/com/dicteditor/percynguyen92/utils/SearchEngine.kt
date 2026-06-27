@@ -1,5 +1,6 @@
-package com.dicteditor.percynguyen92.data
+package com.dicteditor.percynguyen92.utils
 
+import com.dicteditor.percynguyen92.data.model.DictEntry
 import kotlinx.coroutines.ensureActive
 import kotlin.coroutines.coroutineContext
 

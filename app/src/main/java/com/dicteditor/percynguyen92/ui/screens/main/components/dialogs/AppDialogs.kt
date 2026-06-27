@@ -11,8 +11,6 @@ fun AppDialogs(
     context: Context,
     viewModel: DictionaryViewModel,
     hazeState: HazeState,
-    showBatchImportDialog: Boolean,
-    onDismissBatchImport: () -> Unit,
     showCloseFileWarningDialog: Boolean,
     onDismissCloseFileWarning: () -> Unit,
     onConfirmCloseFile: (Boolean) -> Unit,
@@ -43,16 +41,6 @@ fun AppDialogs(
         )
     }
 
-    if (showBatchImportDialog) {
-        BatchImportDialog(
-            hazeState = hazeState,
-            onDismiss = onDismissBatchImport,
-            onImport = { rawText ->
-                viewModel.batchImport(rawText)
-                onDismissBatchImport()
-            }
-        )
-    }
 
     if (showCloseFileWarningDialog) {
         CloseFileWarningDialog(

@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.data
+package com.dicteditor.percynguyen92.data.local
 
 import android.content.Context
 import android.net.Uri

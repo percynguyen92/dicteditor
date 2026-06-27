@@ -10,12 +10,13 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.dicteditor.percynguyen92.R
-import com.dicteditor.percynguyen92.data.DictEntry
-import com.dicteditor.percynguyen92.data.DictEntryPagingSource
-import com.dicteditor.percynguyen92.data.DictionaryRepository
-import com.dicteditor.percynguyen92.data.EntryOpResult
-import com.dicteditor.percynguyen92.data.RecentFilesManager
-import com.dicteditor.percynguyen92.data.SearchEngine
+import com.dicteditor.percynguyen92.data.model.DictEntry
+import com.dicteditor.percynguyen92.data.local.DictEntryPagingSource
+import com.dicteditor.percynguyen92.data.repository.dictionary.DictionaryRepository
+import com.dicteditor.percynguyen92.data.repository.dictionary.EntryOpResult
+import com.dicteditor.percynguyen92.data.repository.dictionary.ImportMergeMode
+import com.dicteditor.percynguyen92.data.local.RecentFilesManager
+import com.dicteditor.percynguyen92.utils.SearchEngine
 import com.dicteditor.percynguyen92.utils.UiText
 import com.dicteditor.percynguyen92.utils.UpdateInfo
 import com.dicteditor.percynguyen92.utils.GithubUpdateChecker
@@ -326,13 +327,30 @@ class DictionaryViewModel : ViewModel() {
         }
     }
 
-    fun batchImport(rawText: String) {
+    fun batchImport(rawText: String, mergeMode: ImportMergeMode = ImportMergeMode.INSERT) {
         if (rawText.isBlank()) return
         viewModelScope.launch {
             loadingManager.tracked {
                 _statusMessage.value = UiText.StringResource(R.string.vm_status_importing)
                 try {
-                    val importResult = repository.batchImport(rawText)
+                    val importResult = repository.batchImport(rawText, mergeMode)
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_imported, listOf(importResult.importedNewCount, importResult.mergedCount, importResult.invalidSkipCount)), SnackbarType.SUCCESS))
+                    _statusMessage.value = UiText.StringResource(R.string.vm_status_imported, listOf(importResult.importedNewCount, importResult.mergedCount))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_import_error, listOf(e.message ?: "")), SnackbarType.ERROR))
+                }
+            }
+        }
+    }
+
+    fun batchImportEntries(entries: List<DictEntry>, mergeMode: ImportMergeMode = ImportMergeMode.INSERT) {
+        if (entries.isEmpty()) return
+        viewModelScope.launch {
+            loadingManager.tracked {
+                _statusMessage.value = UiText.StringResource(R.string.vm_status_importing)
+                try {
+                    val importResult = repository.batchImportEntries(entries, mergeMode)
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_imported, listOf(importResult.importedNewCount, importResult.mergedCount, importResult.invalidSkipCount)), SnackbarType.SUCCESS))
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_imported, listOf(importResult.importedNewCount, importResult.mergedCount))
                 } catch (e: Exception) {

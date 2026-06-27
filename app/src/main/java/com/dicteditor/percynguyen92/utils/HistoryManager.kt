@@ -1,4 +1,4 @@
-package com.dicteditor.percynguyen92.data
+package com.dicteditor.percynguyen92.utils
 
 class HistoryManager<T>(private val maxHistorySize: Int = 10) {
     private val undoStack = ArrayList<ArrayList<T>>()
