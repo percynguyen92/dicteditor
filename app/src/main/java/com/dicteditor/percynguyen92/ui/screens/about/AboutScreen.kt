@@ -36,6 +36,9 @@ import com.dicteditor.percynguyen92.ui.components.appBackground
 import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -234,6 +237,91 @@ fun AboutScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                // Changelog Header
+                Text(
+                    text = stringResource(R.string.title_changelog),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp, start = 4.dp),
+                    textAlign = TextAlign.Start
+                )
+
+                // Changelog Accordion List
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    changelogList.forEachIndexed { index, changelog ->
+                        ChangelogItemRow(
+                            changelog = changelog,
+                            initialExpanded = index == 0,
+                            hazeState = hazeState
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun ChangelogItemRow(
+    changelog: ChangelogVersion,
+    initialExpanded: Boolean,
+    hazeState: HazeState
+) {
+    var expanded by remember { mutableStateOf(initialExpanded) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()
+            .hazeGlassmorphism(state = hazeState, cornerRadius = 16),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(
+            modifier = Modifier
+                .clickable { expanded = !expanded }
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = changelog.version,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (expanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                changelog.pointsResIds.forEach { pointResId ->
+                    Text(
+                        text = stringResource(pointResId),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp, horizontal = 4.dp)
+                    )
+                }
             }
         }
     }

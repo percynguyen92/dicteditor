@@ -168,10 +168,9 @@ class ImportScreenTest {
         composeTestRule.onNodeWithText("Đã tải 1 từ.", substring = true).assertExists()
         composeTestRule.onNodeWithText("Lỗi (2) dòng.", substring = true).assertExists()
 
-        // Check if specific invalid lines are listed
-        // Note: The UI might list them in a LazyColumn, we might need to scroll if there are many, 
-        // but here it's just 2.
-        composeTestRule.onNodeWithText("Dòng 2: InvalidLine", substring = true).assertExists()
-        composeTestRule.onNodeWithText("Dòng 3: =noKey", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Dòng 2", substring = true).assertExists()
+        composeTestRule.onNodeWithText("InvalidLine").assertExists()
+        composeTestRule.onNodeWithText("Dòng 3", substring = true).assertExists()
+        composeTestRule.onNodeWithText("=noKey").assertExists()
     }
 }

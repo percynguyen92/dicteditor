@@ -214,4 +214,34 @@
     <string name="snackbar_no_duplicates_found">Không còn key trùng nào để gộp.</string>
     <string name="import_invalid_line_label">Dòng %1$d</string>
     <string name="import_fixed_line_preview">✓ Sửa thành: %1$s = %2$s</string>
+
+    
+    <!-- About Screen Changelog -->
+    <string name="title_changelog">Nhật ký thay đổi</string>
+    
+    <!-- v1.3 -->
+    <string name="changelog_v1_3_item1">- Giao diện màn hình nhập mới cho phép người dùng tải tệp từ điển .txt từ thiết bị hoặc sao chép - dán văn bản trực tiếp.</string>
+    <string name="changelog_v1_3_item2">- Cung cấp 3 chế độ xử lý mục từ trùng khóa:</string>
+    <string name="changelog_v1_3_item2_sub1">    + Thay thế (Replace): Thay thế toàn bộ nghĩa cũ của từ bằng nghĩa mới nhập.</string>
+    <string name="changelog_v1_3_item2_sub2">    + Thêm sau (Append): Giữ các nghĩa cũ và gộp thêm các nghĩa mới vào phía sau.</string>
+    <string name="changelog_v1_3_item2_sub3">    + Chèn trước (Insert): Giữ các nghĩa cũ và chèn các nghĩa mới lên phía trước để ưu tiên nghĩa mới.</string>
+    <string name="changelog_v1_3_item3">- Tối ưu hoá hiệu năng, sửa lỗi logic và điểu chỉnh màu sắc chủ đạo.</string>
+
+    <!-- v1.2.1 -->
+    <string name="changelog_v1_2_1_item1">- Hot fix: Hiển thị sai màu trong light mode.</string>
+    <string name="changelog_v1_2_1_item2">- Hot fix: Lỗi khi kiểm tra phiên bản mới.</string>
+
+    <!-- v1.2.0 -->
+    <string name="changelog_v1_2_0_item1">- Hỗ trợ kiểm tra phiên bản mới khi mở app.</string>
+    <string name="changelog_v1_2_0_item2">- Sửa lỗi giao diện trong màn hình thêm và chỉnh sửa từ mới.</string>
+    <string name="changelog_v1_2_0_item3">- Sửa một vài lỗi nhỏ.</string>
+
+    <!-- v1.1.0 -->
+    <string name="changelog_v1_1_0_item1">- Sửa lỗi nhỏ và cải tiến hiệu năng.</string>
+
+    <!-- v1.0.1 -->
+    <string name="changelog_v1_0_1_item1">- Sửa lỗi nhỏ.</string>
+
+    <!-- v1.0 -->
+    <string name="changelog_v1_0_0_item1">- Khởi tạo ứng dụng và phát hành phiên bản MVP.</string>
 </resources>
