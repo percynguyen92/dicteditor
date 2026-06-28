@@ -4,7 +4,6 @@ import com.dicteditor.percynguyen92.ui.components.hazeGlassmorphism
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -24,6 +22,10 @@ import com.dicteditor.percynguyen92.utils.getFileName
 import dev.chrisbanes.haze.HazeState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.List
 
 @Composable
 fun AppTopBar(
@@ -49,8 +51,8 @@ fun AppTopBar(
     onSortLengthAscending: () -> Unit,
     onFindReplaceClick: () -> Unit,
     onBatchImportClick: () -> Unit,
+    onFilterDuplicatesClick: () -> Unit,
     onCheckAiConnectionClick: () -> Unit,
-    onExitClick: () -> Unit,
     onAboutClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onReplaceQueryChange: (String) -> Unit,
@@ -133,20 +135,6 @@ fun AppTopBar(
 
                     // State Status Badges
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (hasUnsavedChanges) {
-                            Surface(
-                                color = com.dicteditor.percynguyen92.ui.theme.DarkColors.UnsavedBadge,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.badge_unsaved),
-                                    color = Color.White,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
 
                         if (openedFileUri != null) {
                             IconButton(
@@ -155,7 +143,7 @@ fun AppTopBar(
                                 modifier = Modifier.testTag("undo_button")
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowBack,
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.description_undo),
                                     tint = if (canUndo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
@@ -166,21 +154,31 @@ fun AppTopBar(
                                 modifier = Modifier.testTag("redo_button")
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowForward,
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = stringResource(R.string.description_redo),
                                     tint = if (canRedo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
                             }
-                            IconButton(
+                            TextButton(
                                 onClick = onSaveClick,
                                 enabled = hasUnsavedChanges,
                                 modifier = Modifier.testTag("save_button")
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = stringResource(R.string.description_save_file),
-                                    tint = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Save,
+                                        contentDescription = stringResource(R.string.description_save_file),
+                                        tint = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.button_save),
+                                        color = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
                             }
                         }
 
@@ -204,7 +202,7 @@ fun AppTopBar(
                             ) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.menu_open_file)) },
-                                    leadingIcon = { Icon(Icons.Default.List, contentDescription = stringResource(R.string.menu_open_file)) },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.menu_open_file)) },
                                     onClick = {
                                         menuExpanded = false
                                         onOpenFileClick()
@@ -215,7 +213,7 @@ fun AppTopBar(
                                 if (openedFileUri != null) {
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.menu_sort_desc)) },
-                                        leadingIcon = { Icon(Icons.Default.List, contentDescription = stringResource(R.string.menu_sort_desc)) },
+                                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.menu_sort_desc)) },
                                         onClick = {
                                             menuExpanded = false
                                             onSortDefaultLengthDescending()
@@ -224,7 +222,7 @@ fun AppTopBar(
                                     )
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.menu_sort_asc)) },
-                                        leadingIcon = { Icon(Icons.Default.List, contentDescription = stringResource(R.string.menu_sort_asc)) },
+                                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.menu_sort_asc)) },
                                         onClick = {
                                             menuExpanded = false
                                             onSortLengthAscending()
@@ -248,6 +246,15 @@ fun AppTopBar(
                                             onBatchImportClick()
                                         },
                                         modifier = Modifier.testTag("batch_import_menu")
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.menu_filter_duplicates)) },
+                                        leadingIcon = { Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.menu_filter_duplicates)) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            onFilterDuplicatesClick()
+                                        },
+                                        modifier = Modifier.testTag("filter_duplicates_menu")
                                     )
                                 }
                                 HorizontalDivider()

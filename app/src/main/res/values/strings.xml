@@ -56,7 +56,6 @@
     <!-- AppTopBar -->
     <string name="label_no_file_selected">Chưa chọn file</string>
     <string name="label_word_count_format"> • %1$d từ</string>
-    <string name="badge_unsaved">Chưa lưu</string>
     <string name="description_undo">Hoàn tác</string>
     <string name="description_redo">Làm lại</string>
     <string name="description_save_file">Lưu file</string>
@@ -200,7 +199,19 @@
     <string name="toast_up_to_date">Ứng dụng đã ở phiên bản mới nhất</string>
 
     <!-- Parse Errors -->
+    <string name="label_line_number">Dòng %1$d:</string>
     <string name="error_parse_empty_line">Dòng trống hoặc chỉ chứa khoảng trắng</string>
     <string name="error_parse_missing_delimiter">Thiếu ký tự phân tách \'=\'</string>
     <string name="error_parse_empty_key">Từ khóa tiếng Trung bị trống</string>
+
+    <!-- Duplicate Filtering -->
+    <string name="menu_filter_duplicates">Lọc key trùng</string>
+    <string name="dialog_duplicate_title">Phát hiện key trùng lặp</string>
+    <string name="dialog_duplicate_message">Đã tìm thấy %1$d key bị trùng lặp trong file vừa mở. Bạn có muốn tự động gộp phần nghĩa của chúng lại không?</string>
+    <string name="dialog_duplicate_confirm">Gộp ngay</string>
+    <string name="dialog_duplicate_dismiss">Bỏ qua</string>
+    <string name="snackbar_merged_duplicates_count">Đã gộp %1$d key bị trùng, xóa bỏ %2$d entry dư thừa.</string>
+    <string name="snackbar_no_duplicates_found">Không còn key trùng nào để gộp.</string>
+    <string name="import_invalid_line_label">Dòng %1$d</string>
+    <string name="import_fixed_line_preview">✓ Sửa thành: %1$s = %2$s</string>
 </resources>

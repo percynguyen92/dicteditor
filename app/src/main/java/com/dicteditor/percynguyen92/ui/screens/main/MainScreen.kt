@@ -64,7 +64,6 @@ import androidx.compose.runtime.derivedStateOf
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
-import kotlin.math.ceil
 
 @Composable
 fun MainScreen(
@@ -97,6 +96,7 @@ fun MainScreen(
     val fileLoadError by viewModel.fileLoadError.collectAsStateWithLifecycle()
     val searchError by viewModel.searchError.collectAsStateWithLifecycle()
     val updateInfo by viewModel.updateInfo.collectAsStateWithLifecycle()
+    val duplicateFoundCount by viewModel.duplicateFoundCount.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.checkForUpdates(com.dicteditor.percynguyen92.BuildConfig.VERSION_NAME)
@@ -291,19 +291,13 @@ fun MainScreen(
                 onSortLengthAscending = viewModel::sortByLengthAscending,
                 onFindReplaceClick = { isReplaceMode = !isReplaceMode },
                 onBatchImportClick = { showImportScreen = true },
+                onFilterDuplicatesClick = { viewModel.mergeDuplicateKeys(showSnackbar = true) },
                 onCheckAiConnectionClick = {
                     if (isAtpConnected) {
                         snackbarHostState.showCustomSnackbar(coroutineScope, snackbarAiConnectedOk, SnackbarType.SUCCESS)
                     } else {
                         atpConnectionManager.bindService()
                         showAiErrorDialog = true
-                    }
-                },
-                onExitClick = {
-                    if (hasUnsavedChanges) {
-                        showExitWarningDialog = true
-                    } else {
-                        onExit()
                     }
                 },
                 onAboutClick = { showAboutScreen = true },
@@ -529,6 +523,11 @@ fun MainScreen(
                     }
                 }
             }
+        },
+        duplicateFoundCount = duplicateFoundCount,
+        onDismissDuplicateFilter = viewModel::dismissDuplicateDialog,
+        onConfirmDuplicateFilter = {
+            viewModel.mergeDuplicateKeys(showSnackbar = true)
         }
     )
 }

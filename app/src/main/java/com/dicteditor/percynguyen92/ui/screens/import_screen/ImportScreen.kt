@@ -1,7 +1,6 @@
 package com.dicteditor.percynguyen92.ui.screens.import_screen
 
 import android.annotation.SuppressLint
-import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,10 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dicteditor.percynguyen92.R
@@ -74,7 +74,6 @@ fun ImportScreen(
     onBack: () -> Unit,
     onImport: (entries: List<DictEntry>, mergeMode: ImportMergeMode) -> Unit,
 ) {
-    val context = LocalContext.current
     val hazeState = remember { HazeState() }
 
     var rawText by remember { mutableStateOf("") }
@@ -82,7 +81,12 @@ fun ImportScreen(
     var fileContentText by remember { mutableStateOf("") }
     var parsedEntries by remember { mutableStateOf<List<DictEntry>>(emptyList()) }
     var invalidLines by remember { mutableStateOf<List<InvalidLine>>(emptyList()) }
+    var fixedEntriesMap by remember { mutableStateOf<Map<String, DictEntry>>(emptyMap()) }
     var selectedMergeMode by remember { mutableStateOf(ImportMergeMode.INSERT) }
+
+    val allEntries = remember(parsedEntries, fixedEntriesMap) {
+        parsedEntries + fixedEntriesMap.values
+    }
 
     val mergeModes = remember {
         listOf(
@@ -100,12 +104,14 @@ fun ImportScreen(
         if (textToParse.isBlank()) {
             parsedEntries = emptyList()
             invalidLines = emptyList()
+            fixedEntriesMap = emptyMap()
         } else {
             val parsed = withContext(Dispatchers.Default) {
                 parseEntries(textToParse)
             }
             parsedEntries = parsed.first
             invalidLines = parsed.second
+            fixedEntriesMap = emptyMap()
         }
     }
 
@@ -170,16 +176,16 @@ fun ImportScreen(
 
                         Button(
                             onClick = {
-                                if (parsedEntries.isNotEmpty()) {
-                                    onImport(parsedEntries, selectedMergeMode)
+                                if (allEntries.isNotEmpty()) {
+                                    onImport(allEntries, selectedMergeMode)
                                 }
                             },
-                            enabled = parsedEntries.isNotEmpty(),
+                            enabled = allEntries.isNotEmpty(),
                             modifier = Modifier.testTag("import_save_button"),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = stringResource(R.string.import_button_confirm, parsedEntries.size),
+                                text = stringResource(R.string.import_button_confirm, allEntries.size),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
@@ -289,32 +295,45 @@ fun ImportScreen(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     } else {
-                        Row (
+                        Text(
+                            text = buildAnnotatedString {
+                                val fileLoadedText = stringResource(R.string.import_file_loaded, parsedEntries.size)
+                                val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                withStyle(
+                                    style = MaterialTheme.typography.bodySmall.toSpanStyle().copy(
+                                        color = onSurfaceVariantColor
+                                    )
+                                ) {
+                                    append(fileLoadedText)
+                                }
+                                if (invalidLines.isNotEmpty()) {
+                                    val invalidText = " " + stringResource(R.string.import_invalid_lines_title, invalidLines.size)
+                                    val errorColor = MaterialTheme.colorScheme.error
+                                    withStyle(
+                                        style = MaterialTheme.typography.bodySmall.toSpanStyle().copy(
+                                            color = errorColor,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    ) {
+                                        append(invalidText)
+                                    }
+                                }
+                            },
                             modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.import_file_loaded, parsedEntries.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-
-                            )
-                            if (invalidLines.isNotEmpty()){
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = stringResource(R.string.import_invalid_lines_title, invalidLines.size),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
+                        )
                     }
                 }
 
                 // --- Invalid Lines Warning & Copy ---
                 importInvalidLinesSection(
                     invalidLines = invalidLines,
-                    context = context
+                    onFixedEntryChanged = { lineId, entry ->
+                        fixedEntriesMap = if (entry != null) {
+                            fixedEntriesMap + (lineId to entry)
+                        } else {
+                            fixedEntriesMap - lineId
+                        }
+                    }
                 )
             }
         }

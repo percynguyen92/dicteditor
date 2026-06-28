@@ -1,7 +1,6 @@
 package com.dicteditor.percynguyen92.viewmodel
 
 import android.content.Context
-import java.util.concurrent.atomic.AtomicInteger
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,13 +15,11 @@ import com.dicteditor.percynguyen92.data.repository.dictionary.DictionaryReposit
 import com.dicteditor.percynguyen92.data.repository.dictionary.EntryOpResult
 import com.dicteditor.percynguyen92.data.repository.dictionary.ImportMergeMode
 import com.dicteditor.percynguyen92.data.local.RecentFilesManager
-import com.dicteditor.percynguyen92.utils.SearchEngine
 import com.dicteditor.percynguyen92.utils.UiText
 import com.dicteditor.percynguyen92.utils.UpdateInfo
 import com.dicteditor.percynguyen92.utils.GithubUpdateChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -36,7 +33,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -75,6 +71,8 @@ class DictionaryViewModel : ViewModel() {
 
     private val _fileLoadError = MutableStateFlow<Pair<Uri, String>?>(null)
     val fileLoadError: StateFlow<Pair<Uri, String>?> = _fileLoadError.asStateFlow()
+
+    val duplicateFoundCount = MutableStateFlow<Int?>(null)
 
     fun clearFileLoadError() {
         _fileLoadError.value = null
@@ -180,6 +178,10 @@ class DictionaryViewModel : ViewModel() {
                     val count = result.getOrThrow()
                     addRecentFile(context, uri)
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_loaded, listOf(count))
+                    val dupCount = repository.countDuplicateKeys()
+                    if (dupCount > 0) {
+                        duplicateFoundCount.value = dupCount
+                    }
                 } else {
                     val exception = result.exceptionOrNull()
                     _statusMessage.value = UiText.StringResource(R.string.vm_status_load_error)
@@ -239,6 +241,26 @@ class DictionaryViewModel : ViewModel() {
                 if (ok) {
                     _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.vm_snackbar_redo), SnackbarType.INFO))
                 }
+            }
+        }
+    }
+
+    fun dismissDuplicateDialog() {
+        duplicateFoundCount.value = null
+    }
+
+    fun mergeDuplicateKeys(showSnackbar: Boolean = false) {
+        viewModelScope.launch {
+            loadingManager.tracked {
+                val (mergedKeys, removedEntries) = repository.mergeDuplicateKeys()
+                if (mergedKeys > 0) {
+                    if (showSnackbar) {
+                        _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.snackbar_merged_duplicates_count, listOf(mergedKeys, removedEntries)), SnackbarType.SUCCESS))
+                    }
+                } else if (showSnackbar) {
+                    _uiEvents.emit(UiSnackbarEvent(UiText.StringResource(R.string.snackbar_no_duplicates_found), SnackbarType.INFO))
+                }
+                duplicateFoundCount.value = null
             }
         }
     }

@@ -57,7 +57,7 @@ fun InvalidDictEntryRow(
             }
 
             Text(
-                text = "Dòng ${invalidLine.lineNumber}:",
+                text = stringResource(R.string.label_line_number, invalidLine.lineNumber),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)

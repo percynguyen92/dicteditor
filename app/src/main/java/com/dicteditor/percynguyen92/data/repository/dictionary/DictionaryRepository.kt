@@ -6,9 +6,9 @@ import com.dicteditor.percynguyen92.data.model.DictEntry
 import com.dicteditor.percynguyen92.data.model.InvalidLine
 import com.dicteditor.percynguyen92.data.model.ParseResult
 import com.dicteditor.percynguyen92.data.local.FileHandler
-import com.dicteditor.percynguyen92.utils.SearchEngine
 import com.dicteditor.percynguyen92.data.usecase.ExportUseCase
 import com.dicteditor.percynguyen92.data.usecase.MergeEntriesUseCase
+import com.dicteditor.percynguyen92.utils.SearchEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -252,6 +252,53 @@ class DictionaryRepository(maxHistorySize: Int = 10) {
             state.historyManager.saveToHistory(state.allEntries)
             state.allEntries.removeAll { it.id in ids }
             state.updateStateFlowsLocked()
+        }
+    }
+
+    suspend fun countDuplicateKeys(): Int = withContext(Dispatchers.Default) {
+        state.mutex.withLock {
+            val groupCounts = state.allEntries.groupingBy { it.chinese.lowercase() }.eachCount()
+            groupCounts.count { it.value > 1 }
+        }
+    }
+
+    suspend fun mergeDuplicateKeys(): Pair<Int, Int> = withContext(Dispatchers.Default) {
+        state.mutex.withLock {
+            val groups = state.allEntries.groupBy { it.chinese.lowercase() }
+            val duplicateGroups = groups.filterValues { it.size > 1 }
+            
+            if (duplicateGroups.isEmpty()) return@withLock Pair(0, 0)
+            
+            state.historyManager.saveToHistory(state.allEntries)
+            
+            var mergedKeyCount = 0
+            var removedEntryCount = 0
+            val newEntries = mutableListOf<DictEntry>()
+            val processedKeys = mutableSetOf<String>()
+            
+            for (entry in state.allEntries) {
+                val key = entry.chinese.lowercase()
+                if (key in processedKeys) continue
+                
+                val group = duplicateGroups[key]
+                if (group != null) {
+                    val mergedMeanings = group
+                        .flatMap { it.meanings }
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .distinct()
+                    newEntries.add(entry.copy(meanings = mergedMeanings))
+                    mergedKeyCount++
+                    removedEntryCount += group.size - 1
+                } else {
+                    newEntries.add(entry)
+                }
+                processedKeys.add(key)
+            }
+            
+            state.allEntries = ArrayList(newEntries)
+            state.updateStateFlowsLocked()
+            Pair(mergedKeyCount, removedEntryCount)
         }
     }
 

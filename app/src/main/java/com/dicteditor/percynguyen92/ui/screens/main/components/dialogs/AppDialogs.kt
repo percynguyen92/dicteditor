@@ -27,7 +27,10 @@ fun AppDialogs(
     connectionError: String?,
     updateInfo: UpdateInfo?,
     onDismissUpdate: () -> Unit,
-    onConfirmUpdate: () -> Unit
+    onConfirmUpdate: () -> Unit,
+    duplicateFoundCount: Int?,
+    onDismissDuplicateFilter: () -> Unit,
+    onConfirmDuplicateFilter: () -> Unit
 ) {
     if (updateInfo != null) {
         UpdateDialog(
@@ -90,6 +93,15 @@ fun AppDialogs(
             isAtpConnected = isAtpConnected,
             connectionError = connectionError,
             onDismiss = onDismissAiError
+        )
+    }
+
+    if (duplicateFoundCount != null && duplicateFoundCount > 0) {
+        DuplicateFilterDialog(
+            hazeState = hazeState,
+            duplicateCount = duplicateFoundCount,
+            onDismiss = onDismissDuplicateFilter,
+            onConfirm = onConfirmDuplicateFilter
         )
     }
 }
